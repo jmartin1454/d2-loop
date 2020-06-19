@@ -4,6 +4,12 @@ from math import *
 
 def rho(T):
     return 163.-(T-21.) # kg/m^3
+    
+    
+#rel bt density and temp found by taking the plot of T as a fun of den from coolprop values
+
+T = -2.4506rho + 220.82
+
 
 T_initial=20.
 w=0 # kg/s, mass flow rate
@@ -63,3 +69,23 @@ n_tsteps=100
 dt=1.0 # s
 for tstep in range(0,n_tsteps):
     t=dt*tstep
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
