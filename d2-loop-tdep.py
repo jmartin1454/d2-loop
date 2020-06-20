@@ -144,11 +144,13 @@ for tstep in range(0,n_tsteps):
         dTemp=dt*(-(w/(A_array[nstep]*rho_0))*(T_array[nstep]-T_array[nstep-1])/ds_array[nstep]+source_array[nstep])
         T_array[nstep]=T_array[nstep]+dTemp
     # update w
-    # rho integral
+    # rho*dz integral
     rho_integral=0
     for nstep in range(0,n_array):
         rho_integral=rho_integral-rho_0*beta_t*g*T_array[nstep]*(z_array[nstep]-z_array[nstep-1])
-    # friction term
+    # friction term -- putting this calculation here would allow us
+    # eventually to put in temperature/time dependence of friction
+    # factor.
     foa2_sum=0.
     f=0.04
     Gamma=0.
@@ -160,11 +162,11 @@ for tstep in range(0,n_tsteps):
     # dw step
     dw=(dt/Gamma)*(-friction_term-rho_integral) # Vijayan (4.25)
     w=w+dw
-    sparse=100
     if(t%beam_cycle<beam_on):
         set_beam_current(40.)
     else:
         set_beam_current(0.)
+    sparse=100 # sparseness of standard output
     if(tstep%sparse==0):
         print('This is time %f and w is %f'%(t,w))
         #print(T_array)
