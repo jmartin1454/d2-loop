@@ -1,14 +1,22 @@
 #!/usr/bin/python
 
+# 1D liquid deuterium thermosyphon simulation
+# by Jeff and Kiera
+# June 19, 2020
+
 from math import *
 import matplotlib.pyplot as plt
 
-g=9.8 # m/s^2
+# gravity
+g=9.8 # m/s^2, acceleration due to gravity
+
+# deuterium properties
 beta_t=.012 # K^(-1), relative slope of density with temperature (a la
             # Boussinesq)
 rho_0=168. # kg/m^3
 T_0=21.
 def rho(T):
+<<<<<<< HEAD
 
     return 220.82-(T/2.4506) # kg/m^3
     
@@ -78,16 +86,43 @@ A2= (pi*0.127**2)/4 #m^2 area of pipe after exp
 
 Kexp2=(1-A1/A2)**2
 
-
-w=0 # kg/s, mass flow rate
-q_mod_total=60 # W, total heat deposited into moderator
+=======
+    return rho_0*(1.-beta_t*(T-T_0)) # kg/m^3
 cp=6565. # J/(kg-K), specific heat capacity of LD2
-hc=300. # W/(m^2-K), heat transfer coefficient in HEX
+>>>>>>> upstream/master
 
+# heat input into LD2 moderator vessel
+q_mod_total=60 # W, total heat deposited into moderator
+
+# HEX parameters
+hc=300. # W/(m^2-K), heat transfer coefficient in HEX
+T_cold=19. # K, temperature of the cold wall
+
+# initial conditions
+T_initial=T_cold # initial temperature for the whole loop
+w=0 # kg/s, mass flow rate
+
+<<<<<<< HEAD
 T_cold=19.8 # K
 T_initial=T_cold
+=======
+>>>>>>> upstream/master
 
-n_per=10
+# geometry is
+# - a downward-slanted (single spiral) HEX. "hex"
+# - a downcomer, which goes straight down "down"
+# - a horizontal section "right"
+# - a vertical right circular cylinder, with fairly large dimensions, about 125 L "mod"
+# - a vertical pipe "rise"
+# - another horizontal section going back over to the top of the HEX "left"
+
+n_per=10 # common number of sub-elements per major element
+
+# each major part of the geometry will have a number of constants to
+# define it, and a number of arrays containing temperatures and
+# geometrical information (lengths along the loop, heights, etc.).  To
+# make looping easier, they all get concatenated together after
+# setting up.
 
 L_hex=4 # m, length of hex (could be helix)
 D_hex=0.015 # m
@@ -95,7 +130,7 @@ n_hex=n_per
 f_hex=0.033823
 T_hex=[T_initial]*n_hex
 s_hex=[x*L_hex/(n_hex*1.) for x in range(0,n_hex)]
-source_hex=[-4*hc*(T_hex[x]-T_cold)/(D_hex*rho(21.)*cp) for x in range(0,n_hex)]
+source_hex=[-4*hc*(T_hex[x]-T_cold)/(D_hex*rho_0*cp) for x in range(0,n_hex)]
 A_hex=[pi*D_hex**2/4]*n_hex
 ds_hex=[L_hex/(n_hex*1.)]*n_hex # step sizes in hex
 copper_tube_length=10.*0.0254 # m, physical length of hex
@@ -131,7 +166,7 @@ n_mod=n_per
 T_mod=[T_initial]*n_mod
 s_mod=[L_hex+L_down+L_right+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
 q_h=q_mod_total/(L_mod*pi*D_mod)
-source_mod=[4*q_h/(D_mod*rho(21.)*cp)]*n_mod
+source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod
 A_mod=[pi*D_mod**2/4]*n_mod
 ds_mod=[L_mod/(n_mod*1.)]*n_mod
 z_mod=[bottom_z+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
@@ -156,6 +191,9 @@ A_left=[pi*D_left**2/4]*n_left
 ds_left=[L_left/(n_left*1.)]*n_left
 z_left=[top_z_hex]*n_left
 
+
+# concatenating all the arrays together for easier looping
+
 T_array=T_hex+T_down+T_right+T_mod+T_rise+T_left
 n_array=len(T_array)
 source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod+[0.]*n_rise+[0.]*n_left
@@ -166,6 +204,7 @@ z_array=z_hex+z_down+z_right+z_mod+z_rise+z_left
 print(n_array,T_array,source_array,A_array,ds_array,z_array)
 
 
+<<<<<<< HEAD
 wvalue=[]
 
 tvalue=[]
@@ -180,22 +219,42 @@ T1=[]
 
 n_tsteps=8000
 dt=1. # s
+=======
+# sets the beam current, by modifying the appropriate portion of the
+# source_array where the moderator is
+def set_beam_current(curr):
+    power=curr/40.*60. # W, constant of proportionality to power
+    q_h=power/(L_mod*pi*D_mod)
+    source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod
+    for i in range(0,n_mod):
+        source_array[n_hex+n_down+n_right+i]=source_mod[i]
+    return
+
+
+# main time-stepping loop
+n_tsteps=1000000
+dt=.1 # s
+beam_cycle=240 # s
+beam_on=60 # s
+>>>>>>> upstream/master
 for tstep in range(0,n_tsteps):
     t=dt*tstep
     tvalue.append(t)
     # update temperatures
     for nstep in range(0,n_array):
-        dTemp=dt*(-(w/(A_array[nstep]*rho(21.)))*(T_array[nstep]-T_array[nstep-1])/ds_array[nstep]+source_array[nstep])
+        dTemp=dt*(-(w/(A_array[nstep]*rho_0))*(T_array[nstep]-T_array[nstep-1])/ds_array[nstep]+source_array[nstep])
         T_array[nstep]=T_array[nstep]+dTemp
         if tstep==0:
             for i in range(0,tstep):
                 T1.append(T_array[i])
     # update w
-    # rho integral
+    # rho*dz integral
     rho_integral=0
     for nstep in range(0,n_array):
         rho_integral=rho_integral-rho_0*beta_t*g*T_array[nstep]*(z_array[nstep]-z_array[nstep-1])
-    # friction term
+    # friction term -- putting this calculation here would allow us
+    # eventually to put in temperature/time dependence of friction
+    # factor.
     foa2_sum=0.
     Gamma=0.
     f=f_hex+f_down+f_left+f_right+f_rise
@@ -209,7 +268,15 @@ for tstep in range(0,n_tsteps):
     dw=(dt/Gamma)*(-friction_term-rho_integral) # Vijayan (4.25)
     wvalue.append(w)
     w=w+dw
+<<<<<<< HEAD
     sparse=1
+=======
+    if(t%beam_cycle<beam_on):
+        set_beam_current(40.)
+    else:
+        set_beam_current(0.)
+    sparse=100 # sparseness of standard output
+>>>>>>> upstream/master
     if(tstep%sparse==0):
         print('This is time %f and w is %f'%(t,w))
         print(min(T_array),max(T_array))
@@ -219,6 +286,7 @@ for tstep in range(0,n_tsteps):
         #print(source_array)
         #print
     for nstep in range(0,n_hex):
+<<<<<<< HEAD
         source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho(21.)*cp)
 
 
@@ -249,3 +317,6 @@ plt.show()
 
 
 
+=======
+        source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)
+>>>>>>> upstream/master
