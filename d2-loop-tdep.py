@@ -142,6 +142,8 @@ for tstep in range(0,n_tsteps):
     # update temperatures
     for nstep in range(0,n_array):
         dTemp=dt*(-(w/(A_array[nstep]*rho_0))*(T_array[nstep]-T_array[nstep-1])/ds_array[nstep]+source_array[nstep])
+        # second derivative term with diffusivity
+        # =alpha*(T[i+1]-2T[i]+T[i-1])/(delta s)^2
         T_array[nstep]=T_array[nstep]+dTemp
     # update w
     # rho*dz integral
@@ -156,6 +158,9 @@ for tstep in range(0,n_tsteps):
     Gamma=0.
     for nstep in range(0,n_array):
         D=(4*A_array[nstep]/pi)**0.5
+        # Re=D_H*w/A/mu
+        # f=64/Re # for small w, f~1/w -> infty, but w**2*f ~ w -> 0
+        # fRe=96 in laminar hex, maybe
         foa2_sum=foa2_sum+f*ds_array[nstep]/D/A_array[nstep]**2
         Gamma=Gamma+ds_array[nstep]/A_array[nstep]
     friction_term=foa2_sum*w**2/(2*rho_0)
@@ -173,4 +178,8 @@ for tstep in range(0,n_tsteps):
         #print(source_array)
         #print
     for nstep in range(0,n_hex):
+        # make hc depend on space and time via correlations
+        # Nu=4.8608 or some constant, laminar case
+        # hc=Nu*kt/D_h will also be constant
+        # in turbulent case, need Re to be calculated.
         source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)
