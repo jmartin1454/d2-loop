@@ -16,7 +16,7 @@ beta_t=.012 # K^(-1), relative slope of density with temperature (a la
 rho_0=168. # kg/m^3
 T_0=21.
 def rho(T):
-<<<<<<< HEAD
+
 
     return 220.82-(T/2.4506) # kg/m^3
     
@@ -86,10 +86,10 @@ A2= (pi*0.127**2)/4 #m^2 area of pipe after exp
 
 Kexp2=(1-A1/A2)**2
 
-=======
-    return rho_0*(1.-beta_t*(T-T_0)) # kg/m^3
+
+#return rho_0*(1.-beta_t*(T-T_0)) # kg/m^3
 cp=6565. # J/(kg-K), specific heat capacity of LD2
->>>>>>> upstream/master
+
 
 # heat input into LD2 moderator vessel
 q_mod_total=60 # W, total heat deposited into moderator
@@ -102,11 +102,10 @@ T_cold=19. # K, temperature of the cold wall
 T_initial=T_cold # initial temperature for the whole loop
 w=0 # kg/s, mass flow rate
 
-<<<<<<< HEAD
+
 T_cold=19.8 # K
 T_initial=T_cold
-=======
->>>>>>> upstream/master
+
 
 # geometry is
 # - a downward-slanted (single spiral) HEX. "hex"
@@ -204,7 +203,7 @@ z_array=z_hex+z_down+z_right+z_mod+z_rise+z_left
 print(n_array,T_array,source_array,A_array,ds_array,z_array)
 
 
-<<<<<<< HEAD
+
 wvalue=[]
 
 tvalue=[]
@@ -217,9 +216,9 @@ Tend_array=[]
 
 T1=[]
 
-n_tsteps=8000
+n_tsteps=10000
 dt=1. # s
-=======
+
 # sets the beam current, by modifying the appropriate portion of the
 # source_array where the moderator is
 def set_beam_current(curr):
@@ -232,11 +231,11 @@ def set_beam_current(curr):
 
 
 # main time-stepping loop
-n_tsteps=1000000
+n_tsteps=100000
 dt=.1 # s
 beam_cycle=240 # s
 beam_on=60 # s
->>>>>>> upstream/master
+ 
 for tstep in range(0,n_tsteps):
     t=dt*tstep
     tvalue.append(t)
@@ -257,26 +256,26 @@ for tstep in range(0,n_tsteps):
     # factor.
     foa2_sum=0.
     Gamma=0.
-    f=f_hex+f_down+f_left+f_right+f_rise
+    f=0.04 #f_hex+f_down+f_left+f_right+f_rise
     sumfLoDA2=(((f_down*L_down)/(D_down*((pi*(D_down/2)**2))**2)))
     for nstep in range(0,n_array):
         D=(4*A_array[nstep]/pi)**0.5
-        foa2_sum=foa2_sum+(sumfLoDA2)
+        foa2_sum=foa2_sum+f*ds_array[nstep]/D/A_array[nstep]**2 #(sumfLoDA2)
         Gamma=Gamma+ds_array[nstep]/A_array[nstep]
     friction_term=foa2_sum*w**2/(2*rho_0)
     # dw step
     dw=(dt/Gamma)*(-friction_term-rho_integral) # Vijayan (4.25)
     wvalue.append(w)
     w=w+dw
-<<<<<<< HEAD
+
     sparse=1
-=======
+
     if(t%beam_cycle<beam_on):
         set_beam_current(40.)
     else:
         set_beam_current(0.)
-    sparse=100 # sparseness of standard output
->>>>>>> upstream/master
+    sparse=1 # sparseness of standard output
+
     if(tstep%sparse==0):
         print('This is time %f and w is %f'%(t,w))
         print(min(T_array),max(T_array))
@@ -286,7 +285,7 @@ for tstep in range(0,n_tsteps):
         #print(source_array)
         #print
     for nstep in range(0,n_hex):
-<<<<<<< HEAD
+
         source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho(21.)*cp)
 
 
@@ -317,6 +316,5 @@ plt.show()
 
 
 
-=======
-        source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)
->>>>>>> upstream/master
+source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)
+
