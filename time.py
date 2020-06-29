@@ -219,8 +219,9 @@ def set_beam_current(curr):
 
 
 
-n_tsteps=10000
-dt=1. # s
+n_tsteps=1000000
+dt=.01 # s
+# consider adaptive time steps see Vijayan eq. (4.99)
 beam_cycle=240 # s
 beam_on=60 # s
 alpha=kt/(rho_0*cp) #J/smk kgm2/ss2mK    kgm/s3K * 1/kg/m3 * 1/J/kgK
@@ -252,10 +253,11 @@ for tstep in range(0,n_tsteps):
         Revalue.append(Re)
         #f=64/Re # for small w, f~1/w -> infty, but w**2*f ~ w -> 0
         # fRe=96 in laminar hex, maybe
-        if w < 0.0003:
+        if w < 0.0000003:
             f = 0.03
         else :
             f=64/Re
+        #print('fRe=%f'%(f*Re))
         fvalue.append(f)
         foa2_sum=foa2_sum + f*ds_array[nstep]/(D_h*A_array[nstep]**2 )
         Gamma=Gamma+ds_array[nstep]/A_array[nstep]
@@ -268,7 +270,7 @@ for tstep in range(0,n_tsteps):
     if(t%beam_cycle<beam_on):
         set_beam_current(40.)
     else:
-        set_beam_current(0.)
+        set_beam_current(40.)
     sparse=1 # sparseness of standard output
     if(tstep%sparse==0):
         print('This is time %f and w is %f'%(t,w))
@@ -291,10 +293,12 @@ plt.show()
 
 
 
-plt.plot(fvalue,Revalue,'r:')
-plt.ylabel('Reynolds number')
-plt.xlabel('fricition factor')
-plt.show()
+#plt.plot(Revalue,fvalue,'ro')
+#plt.xlabel('Reynolds number')
+#plt.ylabel('fricition factor')
+#plt.yscale('log')
+#plt.xscale('log')
+#plt.show()
 
 
 
