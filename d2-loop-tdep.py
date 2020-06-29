@@ -16,6 +16,7 @@ beta_t=.012 # K^(-1), relative slope of density with temperature (a la
 rho_0=168. # kg/m^3
 T_0=21.
 def rho(T):
+<<<<<<< HEAD
 
 
     return 220.82-(T/2.4506) # kg/m^3
@@ -88,6 +89,9 @@ Kexp2=(1-A1/A2)**2
 
 
 #return rho_0*(1.-beta_t*(T-T_0)) # kg/m^3
+=======
+    return rho_0*(1.-beta_t*(T-T_0)) # kg/m^3
+>>>>>>> 0464ad3ad79267f64a16e548e0da10a3b8d280b1
 cp=6565. # J/(kg-K), specific heat capacity of LD2
 
 
@@ -238,7 +242,10 @@ beam_on=60 # s
  
 for tstep in range(0,n_tsteps):
     t=dt*tstep
+<<<<<<< HEAD
     tvalue.append(t)
+=======
+>>>>>>> 0464ad3ad79267f64a16e548e0da10a3b8d280b1
     # update temperatures
     for nstep in range(0,n_array):
         dTemp=dt*(-(w/(A_array[nstep]*rho_0))*(T_array[nstep]-T_array[nstep-1])/ds_array[nstep]+source_array[nstep])
@@ -329,5 +336,10 @@ source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)
         # Nu=4.8608 or some constant, laminar case
         # hc=Nu*kt/D_h will also be constant
         # in turbulent case, need Re to be calculated.
+<<<<<<< HEAD
         #source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)
 
+=======
+        source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)
+ 
+>>>>>>> 0464ad3ad79267f64a16e548e0da10a3b8d280b1

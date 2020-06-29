@@ -253,7 +253,7 @@ for tstep in range(0,n_tsteps):
         #f=64/Re # for small w, f~1/w -> infty, but w**2*f ~ w -> 0
         # fRe=96 in laminar hex, maybe
         if w < 0.0003:
-            f = 0.03
+            f = 0.001
         else :
             f=64/Re
         fvalue.append(f)
@@ -266,9 +266,9 @@ for tstep in range(0,n_tsteps):
     w=w+dw
     sparse=1
     if(t%beam_cycle<beam_on):
-        set_beam_current(40.)
+        set_beam_current(10.)
     else:
-        set_beam_current(0.)
+        set_beam_current(10.)
     sparse=1 # sparseness of standard output
     if(tstep%sparse==0):
         print('This is time %f and w is %f'%(t,w))
