@@ -18,6 +18,7 @@ def rho(T):
     return rho_0*(1.-beta_t*(T-T_0)) # kg/m^3
 cp=6565. # J/(kg-K), specific heat capacity of LD2
 
+
 # heat input into LD2 moderator vessel
 q_mod_total=60 # W, total heat deposited into moderator
 
@@ -183,3 +184,4 @@ for tstep in range(0,n_tsteps):
         # hc=Nu*kt/D_h will also be constant
         # in turbulent case, need Re to be calculated.
         source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)
+ 
