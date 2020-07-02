@@ -3,6 +3,7 @@
 # 1D liquid deuterium thermosyphon simulation
 # by Jeff and Kiera
 # June 19, 2020
+# June 29, 2020, merged pull request but kept master
 
 from math import *
 
