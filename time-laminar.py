@@ -3,13 +3,10 @@
 from math import *
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy import interpolate
-from scipy.misc import derivative
-
-
-kt=0.104
+from numpy import *
 
 mu=3.5e-5
+fRe=24*4
 
 g=9.8 # m/s^2
 beta_t=.012 # K^(-1), relative slope of density with temperature (a la
@@ -112,8 +109,20 @@ copper_tube_length=10.*0.0254 # m, physical length of hex
 sinalpha=copper_tube_length/L_hex
 top_z_hex=2.
 z_hex=[top_z_hex-x*L_hex/(n_hex*1.)*sinalpha for x in range(0,n_hex)]
-P_hex=[pi*D_hex]*n_hex
-
+P_hex=pi*D_hex
+D_h_hex=4*A_hex/P_hex
+G_hex=w/A_hex
+Re_hex=D_h_hex*G_hex/mu
+if Re_hex < 2300 :
+    f_hex=fRe/Re_hex
+    #f=64/Re #assuming cicular tube
+    print('The laminar friction factor is %f.' %f)
+elif 3500 > Re_hex > 2300 :
+    f_hex=1.2036*Re_hex**(-0.416) #from vijayan
+    print('The friction factor is in between laminar and turbulent')
+elif Re_hex > 3500 :
+    f_hex=0.316*Re_hex**(-0.25)
+    print('The turbulent friction factor is %f.' %f)
 
 
 L_down=1.937 # m, length of downcomer
@@ -126,21 +135,45 @@ A2_down=pi*D_down**2/4
 ds_down=[L_down/(n_down*1.)]*n_down
 top_z_down=top_z_hex-copper_tube_length
 z_down=[top_z_down-x*L_down/(n_down*1.) for x in range(0,n_down)]
-P_down=[pi*D_down]*n_down
-
-
+P_down=pi*D_down
+D_h_down=4*A_down/P_down
+G_down=w/A_down
+Re_down=D_h_down*G_down/mu
+if Re_down < 2300 :
+    f_down=fRe/Re_down
+    #f=64/Re #assuming cicular tube
+    print('The laminar friction factor is %f.' %f)
+elif 3500 > Re_down > 2300 :
+    f_down=1.2036*Re_down**(-0.416) #from vijayan
+    print('The friction factor is in between laminar and turbulent')
+elif Re_down > 3500 :
+    f_down=0.316*Re_down**(-0.25)
+    print('The turbulent friction factor is %f.' %f)
 
 L_right=(1.27+0.8) # m, length to moderator vessel
 D_right=0.0134 # m
 n_right=n_per
+f_right=8.840442
 T_right=[T_initial]*n_right
 s_right=[L_hex+L_down+x*L_right/(n_right*1.) for x in range(0,n_right)]
 A_right=[pi*D_right**2/4]*n_right
 ds_right=[L_right/(n_right*1.)]*n_right
 bottom_z=top_z_hex-copper_tube_length-L_down
 z_right=[bottom_z]*n_right
-P_right=[pi*D_right]*n_right
-
+P_right=pi*D_right
+D_h_right=4*A_right/P_right
+G_rigjt=w/A_right
+Re_right=D_h_right*G_rigjt/mu
+if Re_right < 2300 :
+    f_right=fRe/Re_right
+    #f=64/Re #assuming cicular tube
+    print('The laminar friction factor is %f.' %f)
+elif 3500 > Re_right > 2300 :
+    f_right=1.2036*Re_right**(-0.416) #from vijayan
+    print('The friction factor is in between laminar and turbulent')
+elif Re_right > 3500 :
+    f_right=0.316*Re_right**(-0.25)
+    print('The turbulent friction factor is %f.' %f)
 
 
 L_mod=0.5 # m, length of right circular cylinder
@@ -153,44 +186,82 @@ source_mod=[4*q_h/(D_mod*rho(21.)*cp)]*n_mod
 A_mod=[pi*D_mod**2/4]*n_mod
 ds_mod=[L_mod/(n_mod*1.)]*n_mod
 z_mod=[bottom_z+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
-P_mod=[pi*D_mod]*n_mod
-
-
+P_mod=pi*D_mod
+D_h_mod=4*A_mod/P_mod
+G_mod=w/A_mod
+Re_mod=D_h_mod*G_mod/mu
+if Re_mod < 2300 :
+    f_mod=fRe/Re_mod
+    #f=64/Re #assuming cicular tube
+    print('The laminar friction factor is %f.' %f)
+elif 3500 > Re_mod > 2300 :
+    f_mod=1.2036*Re_mod**(-0.416) #from vijayan
+    print('The friction factor is in between laminar and turbulent')
+elif Re_mod > 3500 :
+    f_mod=0.316*Re_mod**(-0.25)
+    print('The turbulent friction factor is %f.' %f)
 
 L_rise=1.5 #top_z_hex-bottom_z-L_mod # m, height of rise
 D_rise=0.03175 # m, diameter
 n_rise=n_per
+f_rise=20.946569
 T_rise=[T_initial]*n_rise
 s_rise=[L_hex+L_down+L_right+L_mod+x*L_rise/(n_rise*1.) for x in range(0,n_rise)]
 A_rise=[pi*D_rise**2/4]*n_rise
 ds_rise=[L_rise/(n_rise*1.)]*n_rise
 z_rise=[bottom_z+L_mod+x*L_rise/(n_rise*1.) for x in range(0,n_rise)]
-P_rise=[pi*D_rise]*n_rise
-
+P_rise=pi*D_rise
+D_h_rise=4*A_rise/P_rise
+G_rise=w/A_rise
+Re_rise=D_h_rise*G_rise/mu
+if Re_rise < 2300 :
+    f_rise=fRe/Re_rise
+    #f=64/Re #assuming cicular tube
+    print('The laminar friction factor is %f.' %f)
+elif 3500 > Re_rise > 2300 :
+    f_rise=1.2036*Re_rise**(-0.416) #from vijayan
+    print('The friction factor is in between laminar and turbulent')
+elif Re_rise > 3500 :
+    f_rise=0.316*Re_rise**(-0.25)
+    print('The turbulent friction factor is %f.' %f)
 
 
 L_left=1.75 # m, length to moderator vessel
-D_left=0.03175 # m
+D_left=20.946569 # m
 n_left=n_per
+f_left=0.038406
 T_left=[T_initial]*n_left
 s_left=[L_hex+L_down+L_right+L_mod+L_rise+x*L_left/(n_left*1.) for x in range(0,n_left)]
 A_left=[pi*D_left**2/4]*n_left
 ds_left=[L_left/(n_left*1.)]*n_left
 z_left=[top_z_hex]*n_left
-P_left=[pi*D_left]*n_left
-
-
+P_left=pi*D_left
+D_h_left=4*A_left/P_left
+G_left=w/A_left
+Re_left=D_h_left*G_left/mu
+if Re_left < 2300 :
+    f_left=fRe/Re_left
+    #f=64/Re #assuming cicular tube
+    print('The laminar friction factor is %f.' %f)
+elif 3500 > Re_left > 2300 :
+    f_left=1.2036*Re_left**(-0.416) #from vijayan
+    print('The friction factor is in between laminar and turbulent')
+elif Re_left > 3500 :
+    f_left=0.316*Re_left**(-0.25)
+    print('The turbulent friction factor is %f.' %f)
 
 T_array=T_hex+T_down+T_right+T_mod+T_rise+T_left
 n_array=len(T_array)
 source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod+[0.]*n_rise+[0.]*n_left
 A_array=A_hex+A_down+A_right+A_mod+A_rise+A_left
-P_array=P_hex+P_down+P_right+P_rise+P_mod+P_left
+A2_array=A_hex+A_down+A_right+A_rise+A_left
 s_array=s_hex+s_down+s_right+s_mod+s_rise+s_left
 ds_array=ds_hex+ds_down+ds_right+ds_mod+ds_rise+ds_left
 ds2_array=ds_hex+ds_down+ds_right+ds_rise+ds_left
 z_array=z_hex+z_down+z_right+z_mod+z_rise+z_left
-#print(n_array,T_array,source_array,A_array,ds_array,z_array)
+print(n_array,T_array,source_array,A_array,ds_array,z_array)
+f=f_hex+f_down+f_right+f_rise+f_left
+D=D_hex+D_down+D_right+D_rise+D_left
 
 
 
@@ -206,47 +277,18 @@ Tend_array=[]
 
 T1=[]
 
-fvalue=[]
-
-Revalue=[]
-
-# sets the beam current, by modifying the appropriate portion of the
-# source_array where the moderator is
-def set_beam_current(curr):
-    power=curr/40.*60. # W, constant of proportionality to power
-    q_h=power/(L_mod*pi*D_mod)
-    source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod
-    for i in range(0,n_mod):
-        source_array[n_hex+n_down+n_right+i]=source_mod[i]
-    return
-
-
-Nu=4.8608 #or some constant, laminar case
-hc=Nu*kt/D #will also be constant
-n_tsteps=6000000
-dt=.0001 # s
-# consider adaptive time steps see Vijayan eq. (4.99)
-beam_cycle=240 # s
-beam_on=60 # s
-alpha=kt/(rho_0*cp) #J/smk kgm2/ss2mK    kgm/s3K * 1/kg/m3 * 1/J/kgK
-# kgm m3 kg K / s3 K kg J     kg m4 s2/ s3 kg m2 m2 /s
+n_tsteps=60000
+dt=1. # s
 for tstep in range(0,n_tsteps):
     t=dt*tstep
-    temp = interpolate.interp1d(ds_array, T_array)
-    for nstep in range(0,n_array):
-        dTemp=dt*(-(w/(A_array[nstep]*rho(21.)))*(T_array[nstep]-T_array[nstep-1])/ds_array[nstep]+source_array[nstep] + alpha*(T_array[nstep]-2*T_array[nstep-1]+T_array[nstep-2])/(ds_array[nstep]**2))
-        T_array[nstep]=T_array[nstep]+dTemp
-#        def Temperature(x):
-#            return temp(x)
-#        def Temperature_prime(x):
-#            return derivative(Temperature, x, 1e-6)
-#        def Temperature_primeprime(x):
-#            return derivative(Temperature_prime, x, 1e-6)
-#        dTemp=dt*(-(w/(A_array[nstep]*rho(21.)))*Temperature_prime + source_array[nstep] + alpha*Temperature_primeprime ) #alpha*(T_array[nstep]-2*T_array[nstep-1]+T_array[nstep-2]/(ds_array**2))
-#        T_array[nstep]=T_array[nstep]+dTemp
-        
+    tvalue.append(t)
     # update temperatures
-#    for nstep in range(0,n_array):
+    for nstep in range(0,n_array):
+        dTemp=dt*(-(w/(A_array[nstep]*rho(21.)))*(T_array[nstep]-T_array[nstep-1])/ds_array[nstep]+source_array[nstep])
+        T_array[nstep]=T_array[nstep]+dTemp
+        if tstep==0:
+            for i in range(0,tstep):
+                T1.append(T_array[i])
     # update w
     # rho integral
     rho_integral=0
@@ -255,41 +297,24 @@ for tstep in range(0,n_tsteps):
     # friction term
     foa2_sum=0.
     Gamma=0.
-    #f=0.03 #f_hex+f_down+f_left+f_right+f_rise
-    #sumfLoDA2=(((f_hex*L_hex)/(D_hex*((pi*(D_hex/2)**2))**2)))+(((f_down*L_down)/(D_down*((pi*(D_down/2)**2))**2)))+(((f_right*L_right)/(D_right*((pi*(D_right/2)**2))**2)))+(((f_rise*L_rise + 2*K45)/(D_rise*((pi*(D_rise/2)**2))**2)))+(((f_left*L_left)/(D_left*((pi*(D_left/2)**2))**2))) + (Kcont )*(1/A3**2) +(Kcont2 )*(1/A32**2)+(Kexp)*(1/Aexp2**2)+(Kcont3)*(1/Acont3**2)+(K902 )*(1/A**2)+(Kvalve )*(1/A2**2)+(Kexp2 )*(1/A2**2)
+    f=0.03 #f_hex+f_down+f_left+f_right+f_rise
+    sumfLoDA2=(((f_hex*L_hex)/(D_hex*((pi*(D_hex/2)**2))**2)))+(((f_down*L_down)/(D_down*((pi*(D_down/2)**2))**2)))+(((f_right*L_right)/(D_right*((pi*(D_right/2)**2))**2)))+(((f_rise*L_rise + 2*K45)/(D_rise*((pi*(D_rise/2)**2))**2)))+(((f_left*L_left)/(D_left*((pi*(D_left/2)**2))**2))) + (Kcont )*(1/A3**2) +(Kcont2 )*(1/A32**2)+(Kexp)*(1/Aexp2**2)+(Kcont3)*(1/Acont3**2)+(K902 )*(1/A**2)+(Kvalve )*(1/A2**2)+(Kexp2 )*(1/A2**2)
     for nstep in range(0,n_array):
         D=(4*A_array[nstep]/pi)**0.5
-        D_h=4*A_array[nstep]/P_array[nstep]
-        Re=D_h*w/(A_array[nstep]*mu)
-        Revalue.append(Re)
-        #f=64/Re # for small w, f~1/w -> infty, but w**2*f ~ w -> 0
-        # fRe=96 in laminar hex, maybe
-        if w < 0.0000003:
-            f = 0.03
-        else :
-            f=64/Re
-        #print('fRe=%f'%(f*Re))
-        fvalue.append(f)
-        foa2_sum=foa2_sum + f*ds_array[nstep]/(D_h*A_array[nstep]**2 )
+        foa2_sum=sumfLoDA2# 224990215.649264+359184.293104+29032886.214564+255522892.567439+0.000191+0.000420+797646.014033+2894611.924051+1435779.764455+3377047.244726+62316.830054+5477.065142 #f*ds_array[nstep]/(D*A_array[nstep]**2 )
         Gamma=Gamma+ds_array[nstep]/A_array[nstep]
     friction_term=foa2_sum*w**2/(2*rho_0)
     # dw step
     dw=(dt/Gamma)*(-friction_term-rho_integral) # Vijayan (4.25)
+    wvalue.append(w)
     w=w+dw
-    if(t%beam_cycle<beam_on):
-        set_beam_current(10.)
-    else:
-
-        set_beam_current(10.)
-    sparse=100000 # sparseness of standard output
+    sparse=1
     if(tstep%sparse==0):
         print('This is time %f and w is %f'%(t,w))
         print(min(T_array),max(T_array))
         #print(T_array)
         Tminvalue.append(min(T_array))
         Tmaxvalue.append(max(T_array))
-        wvalue.append(w)
-        tvalue.append(t)
         #print(source_array)
         #print
     for nstep in range(0,n_hex):
@@ -298,27 +323,14 @@ for tstep in range(0,n_tsteps):
 
 
 plt.plot(tvalue,wvalue,'r:')
-plt.ylabel('w (kg/s)')
-plt.title('Mass Flux as a Function of Time')
+plt.ylabel('W')
 plt.xlabel('Time (s)')
 plt.show()
-
-
-
-#plt.plot(Revalue,fvalue,'ro')
-#plt.xlabel('Reynolds number')
-#plt.ylabel('fricition factor')
-#plt.yscale('log')
-#plt.xscale('log')
-#plt.show()
-
-
 
 
 plt.plot(tvalue,Tminvalue,'b:',label='Min Temp')
 plt.plot(tvalue,Tmaxvalue,'r:',label='Max Temp')
 plt.legend(loc='upper left')
-plt.title('Temperature as a Function of Time')
 plt.ylabel('Temperature (K)')
 plt.xlabel('Time (s)')
 plt.show()
@@ -327,33 +339,28 @@ plt.show()
 
 plt.plot(T_array,'b:')
 #plt.plot(T1,'r:')
-plt.ylabel('Temperature (K)')
+plt.ylabel('Temp')
 plt.xlabel('Position')
 plt.show()
 
 
 plt.plot(s_array,T_array,'b:')
 #plt.plot(T1,'r:')
-plt.title('Temperature as a Function of Physical Position Around the Loop')
-plt.ylabel('Temperature (K)')
-plt.xlabel('Position (m)')
+plt.ylabel('Temp')
+plt.xlabel('s_array')
 plt.show()
 
 plt.plot(z_array,T_array,'b:')
 #plt.plot(T1,'r:')
-plt.ylabel('Temperature (K)')
-plt.xlabel('z_array (m)')
+plt.ylabel('Temp')
+plt.xlabel('z_array')
 plt.show()
 
 print(foa2_sum)
 #print(T1)
 
 
-# make hc depend on space and time via correlations
-Nu=4.8608 #or some constant, laminar case
-hc=Nu*kt/D #will also be constant
-# in turbulent case, need Re to be calculated.
-source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)
+
 
 
 
