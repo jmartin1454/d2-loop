@@ -100,19 +100,24 @@ T_initial=T_cold
 
 n_per=10
 
-L_hex=4 # m, length of hex (could be helix)
-D_hex=0.015 # m
+##############################################
+# hex geometry of inital laminar
+##############################################
+
+L_hex=10*0.0254 # m, length of hex (could be helix)
+D_hex=0.001523 # m hydraulic diameter
 n_hex=n_per
 T_hex=[T_initial]*n_hex
 s_hex=[x*L_hex/(n_hex*1.) for x in range(0,n_hex)]
 source_hex=[-4*hc*(T_hex[x]-T_cold)/(D_hex*rho(21.)*cp) for x in range(0,n_hex)]
-A_hex=[pi*D_hex**2/4]*n_hex
+A_hex=[0.000529]*n_hex # flow area
 ds_hex=[L_hex/(n_hex*1.)]*n_hex # step sizes in hex
 copper_tube_length=10.*0.0254 # m, physical length of hex
 sinalpha=copper_tube_length/L_hex
 top_z_hex=2.
 z_hex=[top_z_hex-x*L_hex/(n_hex*1.)*sinalpha for x in range(0,n_hex)]
-P_hex=[pi*D_hex]*n_hex
+P_hex=[1.388779]*n_hex # flow perimeter
+hc=331.916164 # W/m^2K
 
 
 
@@ -222,9 +227,9 @@ def set_beam_current(curr):
 
 
 Nu=4.8608 #or some constant, laminar case
-hc=Nu*kt/D #will also be constant
-n_tsteps=6000000
-dt=.0001 # s
+#hc=Nu*kt/D #will also be constant
+n_tsteps=1000000
+dt=.1 # s
 # consider adaptive time steps see Vijayan eq. (4.99)
 beam_cycle=240 # s
 beam_on=60 # s
@@ -232,9 +237,9 @@ alpha=kt/(rho_0*cp) #J/smk kgm2/ss2mK    kgm/s3K * 1/kg/m3 * 1/J/kgK
 # kgm m3 kg K / s3 K kg J     kg m4 s2/ s3 kg m2 m2 /s
 for tstep in range(0,n_tsteps):
     t=dt*tstep
-    temp = interpolate.interp1d(ds_array, T_array)
+    #temp = interpolate.interp1d(ds_array, T_array)
     for nstep in range(0,n_array):
-        dTemp=dt*(-(w/(A_array[nstep]*rho(21.)))*(T_array[nstep]-T_array[nstep-1])/ds_array[nstep]+source_array[nstep] + alpha*(T_array[nstep]-2*T_array[nstep-1]+T_array[nstep-2])/(ds_array[nstep]**2))
+        dTemp=dt*(-(w/(A_array[nstep]*rho_0))*(T_array[nstep]-T_array[nstep-1])/ds_array[nstep]+source_array[nstep] + alpha*(T_array[nstep]-2*T_array[nstep-1]+T_array[nstep-2])/(ds_array[nstep]**2))
         T_array[nstep]=T_array[nstep]+dTemp
 #        def Temperature(x):
 #            return temp(x)
@@ -255,11 +260,10 @@ for tstep in range(0,n_tsteps):
     # friction term
     foa2_sum=0.
     Gamma=0.
-    #f=0.03 #f_hex+f_down+f_left+f_right+f_rise
-    #sumfLoDA2=(((f_hex*L_hex)/(D_hex*((pi*(D_hex/2)**2))**2)))+(((f_down*L_down)/(D_down*((pi*(D_down/2)**2))**2)))+(((f_right*L_right)/(D_right*((pi*(D_right/2)**2))**2)))+(((f_rise*L_rise + 2*K45)/(D_rise*((pi*(D_rise/2)**2))**2)))+(((f_left*L_left)/(D_left*((pi*(D_left/2)**2))**2))) + (Kcont )*(1/A3**2) +(Kcont2 )*(1/A32**2)+(Kexp)*(1/Aexp2**2)+(Kcont3)*(1/Acont3**2)+(K902 )*(1/A**2)+(Kvalve )*(1/A2**2)+(Kexp2 )*(1/A2**2)
     for nstep in range(0,n_array):
         D=(4*A_array[nstep]/pi)**0.5
         D_h=4*A_array[nstep]/P_array[nstep]
+        hc=Nu*kt/D_h
         Re=D_h*w/(A_array[nstep]*mu)
         Revalue.append(Re)
         #f=64/Re # for small w, f~1/w -> infty, but w**2*f ~ w -> 0
@@ -277,11 +281,10 @@ for tstep in range(0,n_tsteps):
     dw=(dt/Gamma)*(-friction_term-rho_integral) # Vijayan (4.25)
     w=w+dw
     if(t%beam_cycle<beam_on):
-        set_beam_current(10.)
+        set_beam_current(40.)
     else:
-
-        set_beam_current(10.)
-    sparse=100000 # sparseness of standard output
+        set_beam_current(0.)
+    sparse=100 # sparseness of standard output
     if(tstep%sparse==0):
         print('This is time %f and w is %f'%(t,w))
         print(min(T_array),max(T_array))
