@@ -3,6 +3,9 @@
 from math import *
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy import interpolate
+from scipy.misc import derivative
+
 
 kt=0.104
 
@@ -218,9 +221,10 @@ def set_beam_current(curr):
     return
 
 
-
-n_tsteps=1000000
-dt=.01 # s
+Nu=4.8608 #or some constant, laminar case
+hc=Nu*kt/D #will also be constant
+n_tsteps=6000000
+dt=.0001 # s
 # consider adaptive time steps see Vijayan eq. (4.99)
 beam_cycle=240 # s
 beam_on=60 # s
@@ -228,14 +232,21 @@ alpha=kt/(rho_0*cp) #J/smk kgm2/ss2mK    kgm/s3K * 1/kg/m3 * 1/J/kgK
 # kgm m3 kg K / s3 K kg J     kg m4 s2/ s3 kg m2 m2 /s
 for tstep in range(0,n_tsteps):
     t=dt*tstep
-    tvalue.append(t)
-    # update temperatures
+    temp = interpolate.interp1d(ds_array, T_array)
     for nstep in range(0,n_array):
-        dTemp=dt*(-(w/(A_array[nstep]*rho(21.)))*(T_array[nstep]-T_array[nstep-1])/ds_array[nstep]+source_array[nstep] ) #alpha*(T_array[nstep]-2*T_array[nstep-1]+T_array[nstep-2]/(ds_array**2))
+        dTemp=dt*(-(w/(A_array[nstep]*rho(21.)))*(T_array[nstep]-T_array[nstep-1])/ds_array[nstep]+source_array[nstep] + alpha*(T_array[nstep]-2*T_array[nstep-1]+T_array[nstep-2])/(ds_array[nstep]**2))
         T_array[nstep]=T_array[nstep]+dTemp
-        if tstep==0:
-            for i in range(0,tstep):
-                T1.append(T_array[i])
+#        def Temperature(x):
+#            return temp(x)
+#        def Temperature_prime(x):
+#            return derivative(Temperature, x, 1e-6)
+#        def Temperature_primeprime(x):
+#            return derivative(Temperature_prime, x, 1e-6)
+#        dTemp=dt*(-(w/(A_array[nstep]*rho(21.)))*Temperature_prime + source_array[nstep] + alpha*Temperature_primeprime ) #alpha*(T_array[nstep]-2*T_array[nstep-1]+T_array[nstep-2]/(ds_array**2))
+#        T_array[nstep]=T_array[nstep]+dTemp
+        
+    # update temperatures
+#    for nstep in range(0,n_array):
     # update w
     # rho integral
     rho_integral=0
@@ -253,13 +264,8 @@ for tstep in range(0,n_tsteps):
         Revalue.append(Re)
         #f=64/Re # for small w, f~1/w -> infty, but w**2*f ~ w -> 0
         # fRe=96 in laminar hex, maybe
-
-        if w < 0.0003:
-            f = 0.001
-
         if w < 0.0000003:
             f = 0.03
-
         else :
             f=64/Re
         #print('fRe=%f'%(f*Re))
@@ -269,24 +275,21 @@ for tstep in range(0,n_tsteps):
     friction_term=foa2_sum*w**2/(2*rho_0)
     # dw step
     dw=(dt/Gamma)*(-friction_term-rho_integral) # Vijayan (4.25)
-    wvalue.append(w)
     w=w+dw
-    sparse=1
     if(t%beam_cycle<beam_on):
         set_beam_current(10.)
     else:
 
         set_beam_current(10.)
-
-        set_beam_current(40.)
-
-    sparse=1 # sparseness of standard output
+    sparse=100000 # sparseness of standard output
     if(tstep%sparse==0):
         print('This is time %f and w is %f'%(t,w))
         print(min(T_array),max(T_array))
         #print(T_array)
         Tminvalue.append(min(T_array))
         Tmaxvalue.append(max(T_array))
+        wvalue.append(w)
+        tvalue.append(t)
         #print(source_array)
         #print
     for nstep in range(0,n_hex):
