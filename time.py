@@ -190,9 +190,8 @@ T_array=T_hex+T_down+T_right+T_mod+T_rise+T_left
 n_array=len(T_array)
 source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod+[0.]*n_rise+[0.]*n_left
 A_array=A_hex+A_down+A_right+A_mod+A_rise+A_left
-P_array=P_hex+P_down+P_right+P_rise+P_mod+P_left
+P_array=P_hex+P_down+P_right+P_mod+P_rise+P_left
 s_array=s_hex+s_down+s_right+s_mod+s_rise+s_left
-ds_array=ds_hex+ds_down+ds_right+ds_mod+ds_rise+ds_left
 ds2_array=ds_hex+ds_down+ds_right+ds_rise+ds_left
 z_array=z_hex+z_down+z_right+z_mod+z_rise+z_left
 #print(n_array,T_array,source_array,A_array,ds_array,z_array)
@@ -263,7 +262,7 @@ for tstep in range(0,n_tsteps):
     for nstep in range(0,n_array):
         D=(4*A_array[nstep]/pi)**0.5
         D_h=4*A_array[nstep]/P_array[nstep]
-        hc=Nu*kt/D_h
+        #hc=Nu*kt/D_h
         Re=D_h*w/(A_array[nstep]*mu)
         Revalue.append(Re)
         #f=64/Re # for small w, f~1/w -> infty, but w**2*f ~ w -> 0
@@ -281,9 +280,9 @@ for tstep in range(0,n_tsteps):
     dw=(dt/Gamma)*(-friction_term-rho_integral) # Vijayan (4.25)
     w=w+dw
     if(t%beam_cycle<beam_on):
-        set_beam_current(40.)
+        set_beam_current(10.)
     else:
-        set_beam_current(0.)
+        set_beam_current(10.)
     sparse=100 # sparseness of standard output
     if(tstep%sparse==0):
         print('This is time %f and w is %f'%(t,w))
