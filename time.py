@@ -2,13 +2,14 @@
 
 from math import *
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import numpy as np
 from scipy import interpolate
 from scipy.misc import derivative
 
 
 kt=0.104
-
+Nu=4.8608
 mu=3.5e-5
 
 g=9.8 # m/s^2
@@ -93,7 +94,7 @@ Kexp2=(1-A1/A2)**2
 w=0 # kg/s, mass flow rate
 q_mod_total=60 # W, total heat deposited into moderator
 cp=6565. # J/(kg-K), specific heat capacity of LD2
-hc=300. # W/(m^2-K), heat transfer coefficient in HEX
+ # W/(m^2-K), heat transfer coefficient in HEX
 
 T_cold=19.8 # K
 T_initial=T_cold
@@ -105,20 +106,71 @@ n_per=10
 ##############################################
 
 L_hex=10*0.0254 # m, length of hex (could be helix)
-D_hex=0.001523 # m hydraulic diameter
-n_hex=n_per
-T_hex=[T_initial]*n_hex
-s_hex=[x*L_hex/(n_hex*1.) for x in range(0,n_hex)]
-source_hex=[-4*hc*(T_hex[x]-T_cold)/(D_hex*rho(21.)*cp) for x in range(0,n_hex)]
-A_hex=[0.000529]*n_hex # flow area
-ds_hex=[L_hex/(n_hex*1.)]*n_hex # step sizes in hex
-copper_tube_length=10.*0.0254 # m, physical length of hex
-sinalpha=copper_tube_length/L_hex
-top_z_hex=2.
-z_hex=[top_z_hex-x*L_hex/(n_hex*1.)*sinalpha for x in range(0,n_hex)]
-P_hex=[1.388779]*n_hex # flow perimeter
-hc=331.916164 # W/m^2K
+d2=4.76*0.0254 # (m) inner diameter of the outer tubular housing
+d1=4.75*0.0254 # (m) diameter of the inner cold cylinder before
+groove_depth=0.1*0.0254 # m
+groove_width=0.06*0.0254 # m
+n=ngrooves=124
+fig,ax=plt.subplots()
+ax.set_xlim([-d2/2,d2/2])
+ax.set_ylim([-d2/2,d2/2])
+circle1=plt.Circle((0,0),d2/2,color='r',fill=False)
+ax.add_artist(circle1)
+r=d1/2
+w=groove_width
+d=groove_depth
+for groove in range(ngrooves):
+    theta=360./ngrooves
+    center_angle=groove*theta
 
+    alpha=center_angle*pi/180
+    x=r*cos(alpha)
+    y=r*sin(alpha)
+
+    dalpha=asin(w/2/r)
+
+    xsl=r*cos(alpha+dalpha)
+    ysl=r*sin(alpha+dalpha)
+    xel=xsl-d*cos(alpha)
+    yel=ysl-d*sin(alpha)
+
+    xsr=r*cos(alpha-dalpha)
+    ysr=r*sin(alpha-dalpha)
+    xer=xsr-d*cos(alpha)
+    yer=ysr-d*sin(alpha)
+
+    # draw line at edge of each groove
+    line=plt.plot([xsl,xel],[ysl,yel],color='black')
+    line=plt.plot([xsr,xer],[ysr,yer],color='black')
+    # and bottom of groove
+    line=plt.plot([xel,xer],[yel,yer],color='black')
+
+    alpha_deg=alpha*180/pi
+    dalpha_deg=dalpha*180/pi
+    arc=patches.Arc((0,0),2*r,2*r,0,alpha_deg+dalpha_deg,alpha_deg+theta-dalpha_deg)
+    ax.add_patch(arc)
+pgroove=(2*d)+w # inner "U" of a groove
+parc=(theta-2*dalpha_deg)*pi/180*r # outer arc length between two grooves
+Phc=perimeter=ngrooves*(pgroove+parc)
+annulus=pi*(d2**2-d1**2)/4
+agroove=d*w # area of one groove # approximately
+aeps=((2*dalpha)/(2*pi))*pi*r**2-2*0.5*(w/2)*(r*cos(dalpha))
+agroove_total=agroove+aeps
+agrooves=agroove_total*ngrooves
+#D_hex=0.001523 # m hydraulic diameter
+n_hex=n_per
+A=annulus+agrooves
+P=perimeter+(pi*d2)
+P_hex=[perimeter+pi*d2]*n_hex # flow perimeter
+A_hex=[annulus+agrooves]*n_hex
+D_hex=4*A/P
+T_hex=[T_initial]*n_hex
+hc=Nu*kt/D_hex #331.916164 # W/m^2K
+s_hex=[x*L_hex/(n_hex*1.) for x in range(0,n_hex)]
+source_hex=[-4*hc*(T_hex[x]-T_cold)/(D_hex*rho_0*cp) for x in range(0,n_hex)]
+ds_hex=[L_hex/(n_hex*1.)]*n_hex # step sizes in hex
+top_z_hex=2.
+z_hex=[top_z_hex-x*L_hex/(n_hex*1.) for x in range(0,n_hex)]
 
 
 L_down=1.937 # m, length of downcomer
@@ -129,7 +181,7 @@ s_down=[L_hex+x*L_down/(n_down*1.) for x in range(0,n_down)]
 A_down=[pi*D_down**2/4]*n_down
 A2_down=pi*D_down**2/4
 ds_down=[L_down/(n_down*1.)]*n_down
-top_z_down=top_z_hex-copper_tube_length
+top_z_down=top_z_hex
 z_down=[top_z_down-x*L_down/(n_down*1.) for x in range(0,n_down)]
 P_down=[pi*D_down]*n_down
 
@@ -142,7 +194,7 @@ T_right=[T_initial]*n_right
 s_right=[L_hex+L_down+x*L_right/(n_right*1.) for x in range(0,n_right)]
 A_right=[pi*D_right**2/4]*n_right
 ds_right=[L_right/(n_right*1.)]*n_right
-bottom_z=top_z_hex-copper_tube_length-L_down
+bottom_z=top_z_hex-L_down
 z_right=[bottom_z]*n_right
 P_right=[pi*D_right]*n_right
 
@@ -154,7 +206,7 @@ n_mod=n_per
 T_mod=[T_initial]*n_mod
 s_mod=[L_hex+L_down+L_right+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
 q_h=q_mod_total/(L_mod*pi*D_mod)
-source_mod=[4*q_h/(D_mod*rho(21.)*cp)]*n_mod
+source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod
 A_mod=[pi*D_mod**2/4]*n_mod
 ds_mod=[L_mod/(n_mod*1.)]*n_mod
 z_mod=[bottom_z+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
@@ -192,8 +244,8 @@ source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod+[0.]*n_rise+[0.]*n_l
 A_array=A_hex+A_down+A_right+A_mod+A_rise+A_left
 P_array=P_hex+P_down+P_right+P_mod+P_rise+P_left
 s_array=s_hex+s_down+s_right+s_mod+s_rise+s_left
-ds2_array=ds_hex+ds_down+ds_right+ds_rise+ds_left
 z_array=z_hex+z_down+z_right+z_mod+z_rise+z_left
+ds_array=ds_hex+ds_down+ds_right+ds_mod+ds_rise+ds_left
 #print(n_array,T_array,source_array,A_array,ds_array,z_array)
 
 
@@ -218,7 +270,7 @@ Revalue=[]
 # source_array where the moderator is
 def set_beam_current(curr):
     power=curr/40.*60. # W, constant of proportionality to power
-    q_h=power/(L_mod*pi*D_mod)
+    q_h=power/(L_mod*pi*D_mod+(L_hex*Phc))
     source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod
     for i in range(0,n_mod):
         source_array[n_hex+n_down+n_right+i]=source_mod[i]
@@ -238,17 +290,8 @@ for tstep in range(0,n_tsteps):
     t=dt*tstep
     #temp = interpolate.interp1d(ds_array, T_array)
     for nstep in range(0,n_array):
-        dTemp=dt*(-(w/(A_array[nstep]*rho_0))*(T_array[nstep]-T_array[nstep-1])/ds_array[nstep]+source_array[nstep] + alpha*(T_array[nstep]-2*T_array[nstep-1]+T_array[nstep-2])/(ds_array[nstep]**2))
+        dTemp=dt*(-(w/(A_array[nstep]*rho_0))*(T_array[nstep]-T_array[nstep-1])/ds_array[nstep]+source_array[nstep] + alpha*(((T_array[nstep]-T_array[nstep-1])/ds_array[nstep])-((T_array[nstep-1]-T_array[nstep-2])/ds_array[nstep-1]))/((ds_array[nstep]+ds_array[nstep-1])/2))
         T_array[nstep]=T_array[nstep]+dTemp
-#        def Temperature(x):
-#            return temp(x)
-#        def Temperature_prime(x):
-#            return derivative(Temperature, x, 1e-6)
-#        def Temperature_primeprime(x):
-#            return derivative(Temperature_prime, x, 1e-6)
-#        dTemp=dt*(-(w/(A_array[nstep]*rho(21.)))*Temperature_prime + source_array[nstep] + alpha*Temperature_primeprime ) #alpha*(T_array[nstep]-2*T_array[nstep-1]+T_array[nstep-2]/(ds_array**2))
-#        T_array[nstep]=T_array[nstep]+dTemp
-        
     # update temperatures
 #    for nstep in range(0,n_array):
     # update w
@@ -262,7 +305,7 @@ for tstep in range(0,n_tsteps):
     for nstep in range(0,n_array):
         D=(4*A_array[nstep]/pi)**0.5
         D_h=4*A_array[nstep]/P_array[nstep]
-        #hc=Nu*kt/D_h
+        hc=Nu*kt/D_h
         Re=D_h*w/(A_array[nstep]*mu)
         Revalue.append(Re)
         #f=64/Re # for small w, f~1/w -> infty, but w**2*f ~ w -> 0
@@ -295,8 +338,11 @@ for tstep in range(0,n_tsteps):
         #print(source_array)
         #print
     for nstep in range(0,n_hex):
-        source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho(21.)*cp)
+        source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)
 
+
+plt.title('The Cross Section of the Heat Exchanger.')
+plt.show()
 
 
 plt.plot(tvalue,wvalue,'r:')
@@ -347,7 +393,7 @@ plt.ylabel('Temperature (K)')
 plt.xlabel('z_array (m)')
 plt.show()
 
-print(foa2_sum)
+#print(foa2_sum)
 #print(T1)
 
 
