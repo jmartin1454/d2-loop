@@ -37,6 +37,8 @@ A3= (pi*0.03808**2)/4 #m^2 area of pipe after exp  L = 0.02093 D = 0.03808
 
 Kcont=(1/2)*(1-A3/A1)**(3/4)
 
+KoA2cont1=Kcont/(A3**2)
+
 # For second sudden cont
 
 A12= (pi*0.03808**2)/4 #m^2 area of pipe bf exp  L = 0.02093 D = 0.03808
@@ -45,7 +47,15 @@ A32= (pi*0.0127**2)/4 #m^2 area of pipe after exp L =  D = 0.0127
 
 Kcont2=(1/2)*(1-A3/A1)**(3/4)
 
+KoA2cont2=Kcont2/A32**2
+
+# 45 deg turn
+
 K45 = 0.3
+
+D_down=0.0134
+
+KoA245=K45/(pi*D_down**2/4)**2
 
 # For sudden expansion from hydrualic_Resistance.pdf for turb??
 
@@ -55,8 +65,16 @@ Aexp2= (pi*((159.5+29.5)*0.0254)**2) #m^2 area of pipe after exp
 
 Kexp=(1-Aexp1/Aexp2)**2
 
+KoA2exp1=Kexp/Aexp2**2
+
+#180 deg turn
+
 
 K180=2.2
+
+D_mod=0.5
+
+KoA2180=K180/(pi*D_mod**2/4)**2
 
 
 # For sudden contraction from hydrualic_Resistance.pdf
@@ -67,28 +85,36 @@ Acont3= (pi*0.03175**2)/4 #m^2 after
 
 Kcont3=(1/2)*(1-A3/A1)**(3/4)
 
+KoA2cont3=Kcont3/Acont3**2
+
 #90 deg
 
 D= 0.03175 # m
-A=pi*D**2/4 # m^2
+A90=pi*D**2/4 # m^2
 
 K902=0.9
 
+KoA290=K902/A90**2
+
 #valve ? sudden exp ?
 
-A1= (pi*0.03175**2)/4 #m^2 area of pipe bf exp
+A1valve= (pi*0.03175**2)/4 #m^2 area of pipe bf exp
 
-A2= (pi*0.127**2)/4 #m^2 area of pipe after exp
+A2valve= (pi*0.127**2)/4 #m^2 area of pipe after exp
 
 Kvalve=10
 
+KoA2valve=Kvalve/A2valve**2
+
 # For sudden expansion from hydrualic_Resistance.pdf for turb??
 
-A1= (pi*0.03175**2)/4 #m^2 area of pipe bf exp
+A1exp2= (pi*0.03175**2)/4 #m^2 area of pipe bf exp
 
-A2= (pi*0.127**2)/4 #m^2 area of pipe after exp
+A2exp2= (pi*0.127**2)/4 #m^2 area of pipe after exp
 
-Kexp2=(1-A1/A2)**2
+Kexp2=(1-A1exp2/A2exp2)**2
+
+KoA2exp2=Kexp2/A2exp2**2
 
 
 w=0 # kg/s, mass flow rate
@@ -117,17 +143,17 @@ ax.set_ylim([-d2/2,d2/2])
 circle1=plt.Circle((0,0),d2/2,color='r',fill=False)
 ax.add_artist(circle1)
 r=d1/2
-w=groove_width
+wd=groove_width
 d=groove_depth
+theta=360./ngrooves
 for groove in range(ngrooves):
-    theta=360./ngrooves
     center_angle=groove*theta
 
     alpha=center_angle*pi/180
     x=r*cos(alpha)
     y=r*sin(alpha)
 
-    dalpha=asin(w/2/r)
+    dalpha=asin(wd/2/r)
 
     xsl=r*cos(alpha+dalpha)
     ysl=r*sin(alpha+dalpha)
@@ -149,12 +175,12 @@ for groove in range(ngrooves):
     dalpha_deg=dalpha*180/pi
     arc=patches.Arc((0,0),2*r,2*r,0,alpha_deg+dalpha_deg,alpha_deg+theta-dalpha_deg)
     ax.add_patch(arc)
-pgroove=(2*d)+w # inner "U" of a groove
+pgroove=(2*d)+wd # inner "U" of a groove
 parc=(theta-2*dalpha_deg)*pi/180*r # outer arc length between two grooves
 Phc=perimeter=ngrooves*(pgroove+parc)
 annulus=pi*(d2**2-d1**2)/4
-agroove=d*w # area of one groove # approximately
-aeps=((2*dalpha)/(2*pi))*pi*r**2-2*0.5*(w/2)*(r*cos(dalpha))
+agroove=d*wd # area of one groove # approximately
+aeps=((2*dalpha)/(2*pi))*pi*r**2-2*0.5*(wd/2)*(r*cos(dalpha))
 agroove_total=agroove+aeps
 agrooves=agroove_total*ngrooves
 #D_hex=0.001523 # m hydraulic diameter
@@ -178,10 +204,10 @@ D_down=0.0134 # m, diameter of downcomer
 n_down=n_per
 T_down=[T_initial]*n_down
 s_down=[L_hex+x*L_down/(n_down*1.) for x in range(0,n_down)]
+Adown=pi*D_down**2/4
 A_down=[pi*D_down**2/4]*n_down
-A2_down=pi*D_down**2/4
 ds_down=[L_down/(n_down*1.)]*n_down
-top_z_down=top_z_hex
+top_z_down=top_z_hex-L_hex
 z_down=[top_z_down-x*L_down/(n_down*1.) for x in range(0,n_down)]
 P_down=[pi*D_down]*n_down
 
@@ -189,12 +215,13 @@ P_down=[pi*D_down]*n_down
 
 L_right=(1.27+0.8) # m, length to moderator vessel
 D_right=0.0134 # m
+Aright=pi*D_right**2/4
 n_right=n_per
 T_right=[T_initial]*n_right
 s_right=[L_hex+L_down+x*L_right/(n_right*1.) for x in range(0,n_right)]
 A_right=[pi*D_right**2/4]*n_right
 ds_right=[L_right/(n_right*1.)]*n_right
-bottom_z=top_z_hex-L_down
+bottom_z=top_z_hex-L_hex-L_down
 z_right=[bottom_z]*n_right
 P_right=[pi*D_right]*n_right
 
@@ -208,6 +235,7 @@ s_mod=[L_hex+L_down+L_right+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
 q_h=q_mod_total/(L_mod*pi*D_mod)
 source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod
 A_mod=[pi*D_mod**2/4]*n_mod
+Amod=pi*D_mod**2/4
 ds_mod=[L_mod/(n_mod*1.)]*n_mod
 z_mod=[bottom_z+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
 P_mod=[pi*D_mod]*n_mod
@@ -220,6 +248,7 @@ n_rise=n_per
 T_rise=[T_initial]*n_rise
 s_rise=[L_hex+L_down+L_right+L_mod+x*L_rise/(n_rise*1.) for x in range(0,n_rise)]
 A_rise=[pi*D_rise**2/4]*n_rise
+Arise=pi*D_rise**2/4
 ds_rise=[L_rise/(n_rise*1.)]*n_rise
 z_rise=[bottom_z+L_mod+x*L_rise/(n_rise*1.) for x in range(0,n_rise)]
 P_rise=[pi*D_rise]*n_rise
@@ -232,6 +261,7 @@ n_left=n_per
 T_left=[T_initial]*n_left
 s_left=[L_hex+L_down+L_right+L_mod+L_rise+x*L_left/(n_left*1.) for x in range(0,n_left)]
 A_left=[pi*D_left**2/4]*n_left
+Aleft=pi*D_left**2/4
 ds_left=[L_left/(n_left*1.)]*n_left
 z_left=[top_z_hex]*n_left
 P_left=[pi*D_left]*n_left
@@ -241,11 +271,11 @@ P_left=[pi*D_left]*n_left
 T_array=T_hex+T_down+T_right+T_mod+T_rise+T_left
 n_array=len(T_array)
 source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod+[0.]*n_rise+[0.]*n_left
-A_array=A_hex+A_down+A_right+A_mod+A_rise+A_left
-P_array=P_hex+P_down+P_right+P_mod+P_rise+P_left
-s_array=s_hex+s_down+s_right+s_mod+s_rise+s_left
-z_array=z_hex+z_down+z_right+z_mod+z_rise+z_left
-ds_array=ds_hex+ds_down+ds_right+ds_mod+ds_rise+ds_left
+A_array=np.array(A_hex+A_down+A_right+A_mod+A_rise+A_left)
+P_array=np.array(P_hex+P_down+P_right+P_mod+P_rise+P_left)
+s_array=np.array(s_hex+s_down+s_right+s_mod+s_rise+s_left)
+z_array=np.array(z_hex+z_down+z_right+z_mod+z_rise+z_left)
+ds_array=np.array(ds_hex+ds_down+ds_right+ds_mod+ds_rise+ds_left)
 #print(n_array,T_array,source_array,A_array,ds_array,z_array)
 
 
@@ -264,22 +294,41 @@ T1=[]
 
 fvalue=[]
 
+Rehexvalue=[]
+
+Redownvalue=[]
+
 Revalue=[]
+
+Rerightvalue=[]
+
+Remodvalue=[]
+
+Rerisevalue=[]
+
+Releftvalue=[]
+
+fvalue=[]
+
 
 # sets the beam current, by modifying the appropriate portion of the
 # source_array where the moderator is
 def set_beam_current(curr):
     power=curr/40.*60. # W, constant of proportionality to power
-    q_h=power/(L_mod*pi*D_mod+(L_hex*Phc))
+    q_h=power/(L_mod*pi*D_mod)
     source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod
     for i in range(0,n_mod):
         source_array[n_hex+n_down+n_right+i]=source_mod[i]
     return
 
 
+
+
+
+fRe=24.00*4
 Nu=4.8608 #or some constant, laminar case
 #hc=Nu*kt/D #will also be constant
-n_tsteps=1000000
+n_tsteps=200000
 dt=.1 # s
 # consider adaptive time steps see Vijayan eq. (4.99)
 beam_cycle=240 # s
@@ -303,47 +352,105 @@ for tstep in range(0,n_tsteps):
     foa2_sum=0.
     Gamma=0.
     for nstep in range(0,n_array):
-        D=(4*A_array[nstep]/pi)**0.5
+#        D=(4*A_array[nstep]/pi)**0.5
         D_h=4*A_array[nstep]/P_array[nstep]
-        hc=Nu*kt/D_h
-        Re=D_h*w/(A_array[nstep]*mu)
+        #hc=Nu*kt/D_h
+#        Re=D_h*w/(A_array[nstep]*mu)
+        Re=4*w/(P_array[nstep]*mu)
+        Rehex=[D_hex*w/(A*mu)]*n_hex
+        Redown=[D_down*w/(Adown*mu)]*n_down
+        Reright=[D_right*w/(Aright*mu)]*n_right
+        Remod=[D_mod*w/(Amod*mu)]*n_mod
+        Rerise=[D_rise*w/(Arise*mu)]*n_rise
+        Releft=[D_left*w/(Aleft*mu)]*n_left
         Revalue.append(Re)
+        Re_array=np.array(Rehex + Redown + Reright + Remod + Rerise + Releft)
         #f=64/Re # for small w, f~1/w -> infty, but w**2*f ~ w -> 0
         # fRe=96 in laminar hex, maybe
         if w < 0.0000003:
             f = 0.03
         else :
-            f=64/Re
-        #print('fRe=%f'%(f*Re))
+            if Re < 2300 :
+                f=fRe/Re
+                #f=64/Re #assuming cicular tube
+#                print('The laminar friction factor is %f.' %f)
+            elif 3500 > Re > 2300 :
+                f=1.2036*Re**(-0.416) #from vijayan
+#                print('The friction factor is in between laminar and turbulent')
+            elif Re > 3500 :
+                f=0.316*Re**(-0.25)
+#                print('The turbulent friction factor is %f.' %f)
         fvalue.append(f)
+#            f=64/Re
+        #print('fRe=%f'%(f*Re))
         foa2_sum=foa2_sum + f*ds_array[nstep]/(D_h*A_array[nstep]**2 )
-        Gamma=Gamma+ds_array[nstep]/A_array[nstep]
-    friction_term=foa2_sum*w**2/(2*rho_0)
+        Gamma=Gamma+(ds_array[nstep]/A_array[nstep])
+    foa2K_sum=foa2_sum + KoA2cont1 + KoA2cont2 + 2*KoA245 + KoA2exp1 + KoA2cont1 + KoA290 + KoA2valve + KoA2exp2
+    friction_term=foa2K_sum*w**2/(2*rho_0)
     # dw step
     dw=(dt/Gamma)*(-friction_term-rho_integral) # Vijayan (4.25)
     w=w+dw
     if(t%beam_cycle<beam_on):
-        set_beam_current(10.)
+        set_beam_current(40.)
     else:
-        set_beam_current(10.)
-    sparse=100 # sparseness of standard output
+        set_beam_current(0.)
+    sparse=10 # sparseness of standard output
     if(tstep%sparse==0):
         print('This is time %f and w is %f'%(t,w))
         print(min(T_array),max(T_array))
+#        print(Revalue)
+        print(f)
         #print(T_array)
         Tminvalue.append(min(T_array))
         Tmaxvalue.append(max(T_array))
         wvalue.append(w)
         tvalue.append(t)
+        Rehexvalue.append(Rehex)
+        Redownvalue.append(Redown)
+        Rerightvalue.append(Reright)
+        Remodvalue.append(Remod)
+        Rerisevalue.append(Rerise)
+        Releftvalue.append(Releft)
+        fvalue.append(f)
         #print(source_array)
         #print
     for nstep in range(0,n_hex):
-        source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)
+        source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)*perimeter/P
+
+
+
+
+#print()
+#print(Revalue)
+print()
+print(A_hex)
+print(P_hex)
+print()
+print(agroove)
+print()
+print(D_hex)
+print()
+print(hc)
+print()
+#print(fvalue)
+print(w/A)
 
 
 plt.title('The Cross Section of the Heat Exchanger.')
 plt.show()
 
+#
+#plt.plot(tvalue,fvalue,'r:')
+#plt.ylabel('f')
+#plt.title('friction factor as a Function of Time')
+#plt.xlabel('Time (s)')
+#plt.show()
+#
+#plt.plot(fvalue,wvalue,'r:')
+#plt.ylabel('w (kg/s)')
+#plt.title('Mass Flux as a Function of f')
+#plt.xlabel('f')
+#plt.show()
 
 plt.plot(tvalue,wvalue,'r:')
 plt.ylabel('w (kg/s)')
@@ -351,6 +458,38 @@ plt.title('Mass Flux as a Function of Time')
 plt.xlabel('Time (s)')
 plt.show()
 
+
+
+plt.plot(tvalue,Rehexvalue,'r:')
+plt.ylabel('Re')
+plt.title('Re as a Function of Time in the HEX')
+plt.xlabel('Time (s)')
+plt.show()
+
+
+plt.plot(tvalue,Rerightvalue,'r:')
+plt.ylabel('Re')
+plt.title('Re as a Function of Time in the right pipe')
+plt.xlabel('Time (s)')
+plt.show()
+
+plt.plot(tvalue,Remodvalue,'r:')
+plt.ylabel('Re')
+plt.title('Re as a Function of Time in the moderator')
+plt.xlabel('Time (s)')
+plt.show()
+
+plt.plot(tvalue,Rerisevalue,'r:')
+plt.ylabel('Re')
+plt.title('Re as a Function of Time in the rising pipe')
+plt.xlabel('Time (s)')
+plt.show()
+
+plt.plot(tvalue,Releftvalue,'r:')
+plt.ylabel('Re')
+plt.title('Re as a Function of Time in the left pipe')
+plt.xlabel('Time (s)')
+plt.show()
 
 
 #plt.plot(Revalue,fvalue,'ro')
@@ -375,6 +514,7 @@ plt.show()
 
 plt.plot(T_array,'b:')
 #plt.plot(T1,'r:')
+plt.title('Temperature as a Function of Position of Index')
 plt.ylabel('Temperature (K)')
 plt.xlabel('Position')
 plt.show()
@@ -389,8 +529,9 @@ plt.show()
 
 plt.plot(z_array,T_array,'b:')
 #plt.plot(T1,'r:')
+plt.title('Temperature as a Function of Height Around the Loop')
 plt.ylabel('Temperature (K)')
-plt.xlabel('z_array (m)')
+plt.xlabel('Height Position (m)')
 plt.show()
 
 #print(foa2_sum)
