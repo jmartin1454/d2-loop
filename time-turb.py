@@ -230,11 +230,13 @@ P_right=[pi*D_right]*n_right
 x_right=[x*L_right/(n_right*1.) for x in range(0,n_right)]
 
 L_down2=0.5 # m, length to moderator vessel
-D_down2=D_right # m
+D_down2=0.5 # m
 Adown2=pi*D_down2**2/4
 n_down2=n_per
 T_down2=[T_initial]*n_down2
 s_down2=[L_hex+L_down+L_right+x*L_down2/(n_down2*1.) for x in range(0,n_down2)]
+q_h_down2=q_mod_total/(L_down2*pi*D_down2)
+source_mod_down2=[4*q_h_down2/(D_down2*rho_0*cp)]*n_down2
 A_down2=[pi*D_down2**2/4]*n_down2
 ds_down2=[L_down2/(n_down2*1.)]*n_down2
 bottom_z=top_z_hex-L_hex-L_down
@@ -258,7 +260,6 @@ z_mod=[very_bottom_z+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
 P_mod=[pi*D_mod]*n_mod
 #Grmod = (g*beta_t*rho**2*D_mod**3*(q_h*(L_hex+L_down)/(Amod*mu*cp)))/(mu**2)
 x_mod=[L_right]*n_mod
-
 
 L_left=L_right # m, length to moderator vessel
 D_left=0.03175 # m
@@ -290,7 +291,7 @@ x_rise=[L_right-L_left]*n_rise
 
 T_array=np.array(T_hex+T_down+T_right+T_down2+T_mod+T_left+T_rise)
 n_array=len(T_array)
-source_array=source_hex+[0.]*n_down+[0.]*n_right+[0.]*n_down2+source_mod+[0.]*n_left+[0.]*n_rise
+source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod_down2+source_mod+[0.]*n_left+[0.]*n_rise
 A_array=np.array(A_hex+A_down+A_right+A_down2+A_mod+A_left+A_rise)
 P_array=np.array(P_hex+P_down+P_right+P_down2+P_mod+P_left+P_rise)
 s_array=np.array(s_hex+s_down+s_right+s_down2+s_mod+s_left+s_rise)
@@ -362,6 +363,8 @@ Rerisevalue=[]
 
 Releftvalue=[]
 
+Redown2value=[]
+
 fvalue=[]
 
 
@@ -381,7 +384,7 @@ def set_beam_current(curr):
 fRe=24.00*4
 Nu=4.8608 #or some constant, laminar case
 #hc=Nu*kt/D #will also be constant
-n_tsteps=100000
+n_tsteps=400000
 dt=.1 # s
 # consider adaptive time steps see Vijayan eq. (4.99)
 beam_cycle=240 # s
@@ -413,6 +416,7 @@ for tstep in range(0,n_tsteps):
         Rehex=D_hex*w/(A*mu)
         Redown=D_down*w/(Adown*mu)
         Reright=D_right*w/(Aright*mu)
+        Redown2=D_down2*w/(Adown2*mu)
         Remod=D_mod*w/(Amod*mu)
         Rerise=D_rise*w/(Arise*mu)
         Releft=D_left*w/(Aleft*mu)
@@ -465,6 +469,7 @@ for tstep in range(0,n_tsteps):
         Rehexvalue.append(Rehex)
         Redownvalue.append(Redown)
         Rerightvalue.append(Reright)
+        Redown2value.append(Redown2)
         Remodvalue.append(Remod)
         Rerisevalue.append(Rerise)
         Releftvalue.append(Releft)
@@ -530,6 +535,13 @@ plt.ylabel('Re')
 plt.title('Re as a Function of Time in the right pipe t')
 plt.xlabel('Time (s)')
 plt.show()
+
+plt.plot(tvalue,Rehexvalue,'r:')
+plt.ylabel('Re')
+plt.title('Re as a Function of Time in the HEX t')
+plt.xlabel('Time (s)')
+plt.show()
+
 
 plt.plot(tvalue,Remodvalue,'r:')
 plt.ylabel('Re')
@@ -601,10 +613,6 @@ Nu=4.8608 #or some constant, laminar case
 hc=Nu*kt/D #will also be constant
 # in turbulent case, need Re to be calculated.
 source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)
-
-
-
-
 
 
 
