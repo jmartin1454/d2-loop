@@ -235,8 +235,9 @@ Adown2=pi*D_down2**2/4
 n_down2=n_per
 T_down2=[T_initial]*n_down2
 s_down2=[L_hex+L_down+L_right+x*L_down2/(n_down2*1.) for x in range(0,n_down2)]
-q_h_down2=q_mod_total/(L_down2*pi*D_down2)
-source_mod_down2=[4*q_h_down2/(D_down2*rho_0*cp)]*n_down2
+hc_down2=Nu*kt/D_down2
+T_down2=[T_initial]*n_down2
+Tw=22 #K
 A_down2=[pi*D_down2**2/4]*n_down2
 ds_down2=[L_down2/(n_down2*1.)]*n_down2
 bottom_z=top_z_hex-L_hex-L_down
@@ -245,14 +246,17 @@ very_bottom_z=bottom_z-L_down2
 P_down2=[pi*D_down2]*n_down2
 #Grdown2 = (g*beta_t*rho**2*D_down2**3*(q_h*(L_hex+L_down)/(Adown2*mu*cp)))/(mu**2)
 x_down2=[L_right]*n_down2
+q_h_down2=q_mod_total/(L_down2*pi*D_down2)
+source_mod_down2=[4*hc_down2*(Tw-T_down2[x])/(D_down2*rho_0*cp) for x in range(0,n_down2)]
 
 L_mod=0.5 # m, length of right circular cylinder
 D_mod=0.5 # m, diameter
 n_mod=n_per
 T_mod=[T_initial]*n_mod
 s_mod=[L_hex+L_down+L_right+L_down2+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
-q_h=q_mod_total/(L_mod*pi*D_mod)
-source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod
+hc_mod=Nu*kt/D_mod
+T_mod=[T_initial]*n_mod
+Tw=22 #K
 A_mod=[pi*D_mod**2/4]*n_mod
 Amod=pi*D_mod**2/4
 ds_mod=[L_mod/(n_mod*1.)]*n_mod
@@ -260,6 +264,8 @@ z_mod=[very_bottom_z+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
 P_mod=[pi*D_mod]*n_mod
 #Grmod = (g*beta_t*rho**2*D_mod**3*(q_h*(L_hex+L_down)/(Amod*mu*cp)))/(mu**2)
 x_mod=[L_right]*n_mod
+q_h=q_mod_total/(L_mod*pi*D_mod)
+source_mod=[4*hc_mod*(Tw-T_mod[x])/(D_mod*rho_0*cp) for x in range(0,n_mod)]
 
 L_left=L_right # m, length to moderator vessel
 D_left=0.03175 # m
@@ -536,7 +542,7 @@ plt.title('Re as a Function of Time in the right pipe t')
 plt.xlabel('Time (s)')
 plt.show()
 
-plt.plot(tvalue,Rehexvalue,'r:')
+plt.plot(tvalue,Redown2value,'r:')
 plt.ylabel('Re')
 plt.title('Re as a Function of Time in the HEX t')
 plt.xlabel('Time (s)')
@@ -613,6 +619,7 @@ Nu=4.8608 #or some constant, laminar case
 hc=Nu*kt/D #will also be constant
 # in turbulent case, need Re to be calculated.
 source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)
+
 
 
 

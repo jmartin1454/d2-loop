@@ -195,7 +195,7 @@ hc=Nu*kt/D_hex #331.916164 # W/m^2K
 s_hex=[x*L_hex/(n_hex*1.) for x in range(0,n_hex)]
 source_hex=[-4*hc*(T_hex[x]-T_cold)/(D_hex*rho_0*cp) for x in range(0,n_hex)]
 ds_hex=[L_hex/(n_hex*1.)]*n_hex # step sizes in hex
-top_z_hex=(1.937+(10*0.0254))
+top_z_hex=1.937+L_hex
 z_hex=[top_z_hex-x*L_hex/(n_hex*1.) for x in range(0,n_hex)]
 #Grhex= (g*beta_t*rho**2*Dh**3*(q_h*(L_hex+L_down)/(A*mu*cp)))/(mu**2)
 x_hex=[0.0]*n_hex
@@ -230,7 +230,7 @@ P_right=[pi*D_right]*n_right
 x_right=[x*L_right/(n_right*1.) for x in range(0,n_right)]
 
 L_down2=0.5 # m, length to moderator vessel
-D_down2=0.5 # m
+D_down2=D_right # m
 Adown2=pi*D_down2**2/4
 n_down2=n_per
 T_down2=[T_initial]*n_down2
@@ -246,11 +246,28 @@ P_down2=[pi*D_down2]*n_down2
 #Grdown2 = (g*beta_t*rho**2*D_down2**3*(q_h*(L_hex+L_down)/(Adown2*mu*cp)))/(mu**2)
 x_down2=[L_right]*n_down2
 
+L_right2=0.5 # m, length to moderator vessel
+D_right2=D_right # m
+Aright2=pi*D_right2**2/4
+n_right2=n_per
+T_right2=[T_initial]*n_right2
+s_right2=[L_hex+L_down+L_right+L_down2+x*L_right2/(n_right2*1.) for x in range(0,n_right2)]
+q_h_right2=q_mod_total/(L_right2*pi*D_right2)
+source_mod_right2=[4*q_h_right2/(D_right2*rho_0*cp)]*n_right2
+A_right2=[pi*D_right2**2/4]*n_right2
+ds_right2=[L_right2/(n_right2*1.)]*n_right2
+bottom_z=top_z_hex-L_hex-L_down
+z_right2=[very_bottom_z]*n_right2
+P_right2=[pi*D_right2]*n_right2
+#Grdown2 = (g*beta_t*rho**2*D_down2**3*(q_h*(L_hex+L_down)/(Adown2*mu*cp)))/(mu**2)
+x_right2=[L_right2]*n_right2
+
+
 L_mod=0.5 # m, length of right circular cylinder
 D_mod=0.5 # m, diameter
 n_mod=n_per
 T_mod=[T_initial]*n_mod
-s_mod=[L_hex+L_down+L_right+L_down2+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
+s_mod=[L_hex+L_down+L_right+L_down2+L_right2+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
 q_h=q_mod_total/(L_mod*pi*D_mod)
 source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod
 A_mod=[pi*D_mod**2/4]*n_mod
@@ -259,13 +276,33 @@ ds_mod=[L_mod/(n_mod*1.)]*n_mod
 z_mod=[very_bottom_z+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
 P_mod=[pi*D_mod]*n_mod
 #Grmod = (g*beta_t*rho**2*D_mod**3*(q_h*(L_hex+L_down)/(Amod*mu*cp)))/(mu**2)
-x_mod=[L_right]*n_mod
+x_mod=[L_right2]*n_mod
+
+
+
+L_left2=0.5 #top_z_hex-bottom_z-L_mod # m, height of rise
+D_left2=0.03175 # m, diameter
+n_left2=n_per
+T_left2=[T_initial]*n_left2
+s_left2=[L_hex+L_down+L_right+L_down2+L_right2+L_mod+x*L_left2/(n_left2*1.) for x in range(0,n_left2)]
+q_h_left2=q_mod_total/(L_left2*pi*D_left2)
+source_mod_left2=[4*q_h_left2/(D_left2*rho_0*cp)]*n_left2
+A_left2=[pi*D_left2**2/4]*n_left2
+Aleft2=pi*D_left2**2/4
+ds_left2=[L_left2/(n_left2*1.)]*n_left2
+z_left2=[bottom_z]*n_left2
+P_left2=[pi*D_left2]*n_left2
+#Grrise = (g*beta_t*rho**2*D_rise**3*(q_h*(L_hex+L_down)/(Arise*mu*cp)))/(mu**2)
+x_left2=[L_right2-x*L_left2/(n_left2*1.) for x in range(0,n_left2)]
+
+
+
 
 L_left=L_right # m, length to moderator vessel
 D_left=0.03175 # m
 n_left=n_per
 T_left=[T_initial]*n_left
-s_left=[L_hex+L_down+L_right+L_down2+L_mod+x*L_left/(n_left*1.) for x in range(0,n_left)]
+s_left=[L_hex+L_down+L_right+L_down2+L_right2+L_mod+L_left2+x*L_left/(n_left*1.) for x in range(0,n_left)]
 A_left=[pi*D_left**2/4]*n_left
 Aleft=pi*D_left**2/4
 ds_left=[L_left/(n_left*1.)]*n_left
@@ -280,7 +317,7 @@ L_rise=L_hex+L_down #top_z_hex-bottom_z-L_mod # m, height of rise
 D_rise=0.03175 # m, diameter
 n_rise=n_per
 T_rise=[T_initial]*n_rise
-s_rise=[L_hex+L_down+L_right+L_down2+L_mod+L_left+x*L_rise/(n_rise*1.) for x in range(0,n_rise)]
+s_rise=[L_hex+L_down+L_right+L_down2+L_right2+L_mod+L_left2+L_left+x*L_rise/(n_rise*1.) for x in range(0,n_rise)]
 A_rise=[pi*D_rise**2/4]*n_rise
 Arise=pi*D_rise**2/4
 ds_rise=[L_rise/(n_rise*1.)]*n_rise
@@ -289,15 +326,15 @@ P_rise=[pi*D_rise]*n_rise
 #Grrise = (g*beta_t*rho**2*D_rise**3*(q_h*(L_hex+L_down)/(Arise*mu*cp)))/(mu**2)
 x_rise=[L_right-L_left]*n_rise
 
-T_array=np.array(T_hex+T_down+T_right+T_down2+T_mod+T_left+T_rise)
+T_array=np.array(T_hex+T_down+T_right+T_down2+T_right2+T_mod+T_left2+T_left+T_rise)
 n_array=len(T_array)
-source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod_down2+source_mod+[0.]*n_left+[0.]*n_rise
-A_array=np.array(A_hex+A_down+A_right+A_down2+A_mod+A_left+A_rise)
-P_array=np.array(P_hex+P_down+P_right+P_down2+P_mod+P_left+P_rise)
-s_array=np.array(s_hex+s_down+s_right+s_down2+s_mod+s_left+s_rise)
-z_array=np.array(z_hex+z_down+z_right+z_down2+z_mod+z_left+z_rise)
-ds_array=np.array(ds_hex+ds_down+ds_right+ds_down2+ds_mod+ds_left+ds_rise)
-x_array=np.array(x_hex+x_down+x_right+x_down2+x_mod+x_left+x_rise)
+source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod_down2+source_mod_right2+source_mod+source_mod_left2+[0.]*n_left+[0.]*n_rise
+A_array=np.array(A_hex+A_down+A_right+A_down2+A_right2+A_mod+A_left2+A_left+A_rise)
+P_array=np.array(P_hex+P_down+P_right+P_down2+P_right2+P_mod+P_left2+P_left+P_rise)
+s_array=np.array(s_hex+s_down+s_right+s_down2+s_right2+s_mod+s_left2+s_left+s_rise)
+z_array=np.array(z_hex+z_down+z_right+z_down2+z_right2+z_mod+z_left2+z_left+z_rise)
+ds_array=np.array(ds_hex+ds_down+ds_right+ds_down2+ds_right2+ds_mod+ds_left2+ds_left+ds_rise)
+x_array=np.array(x_hex+x_down+x_right+x_down2+x_right2+x_mod+x_left2+x_left+x_rise)
 print(n_array,T_array,source_array,x_array,s_array,z_array)
 
 #Lt=L_hex+L_down+L_right+L_mod+L_left+L_rise
@@ -363,8 +400,6 @@ Rerisevalue=[]
 
 Releftvalue=[]
 
-Redown2value=[]
-
 fvalue=[]
 
 
@@ -416,7 +451,6 @@ for tstep in range(0,n_tsteps):
         Rehex=D_hex*w/(A*mu)
         Redown=D_down*w/(Adown*mu)
         Reright=D_right*w/(Aright*mu)
-        Redown2=D_down2*w/(Adown2*mu)
         Remod=D_mod*w/(Amod*mu)
         Rerise=D_rise*w/(Arise*mu)
         Releft=D_left*w/(Aleft*mu)
@@ -469,7 +503,6 @@ for tstep in range(0,n_tsteps):
         Rehexvalue.append(Rehex)
         Redownvalue.append(Redown)
         Rerightvalue.append(Reright)
-        Redown2value.append(Redown2)
         Remodvalue.append(Remod)
         Rerisevalue.append(Rerise)
         Releftvalue.append(Releft)
@@ -535,13 +568,6 @@ plt.ylabel('Re')
 plt.title('Re as a Function of Time in the right pipe t')
 plt.xlabel('Time (s)')
 plt.show()
-
-plt.plot(tvalue,Rehexvalue,'r:')
-plt.ylabel('Re')
-plt.title('Re as a Function of Time in the HEX t')
-plt.xlabel('Time (s)')
-plt.show()
-
 
 plt.plot(tvalue,Remodvalue,'r:')
 plt.ylabel('Re')
@@ -613,6 +639,11 @@ Nu=4.8608 #or some constant, laminar case
 hc=Nu*kt/D #will also be constant
 # in turbulent case, need Re to be calculated.
 source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)
+
+
+
+
+
 
 
 
