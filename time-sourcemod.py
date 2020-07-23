@@ -119,7 +119,7 @@ KoA2exp2=Kexp2/A2exp2**2
 
 
 w=0 # kg/s, mass flow rate
-q_mod_total=60 # W, total heat deposited into moderator
+q_mod_total=60/4 # W, total heat deposited into moderator
 cp=6565. # J/(kg-K), specific heat capacity of LD2
  # W/(m^2-K), heat transfer coefficient in HEX
 
@@ -257,8 +257,8 @@ D_mod=0.5 # m, diameter
 n_mod=n_per
 T_mod=[T_initial]*n_mod
 s_mod=[L_hex+L_down+L_right+L_down2+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
-q_h=q_mod_total/(L_mod*pi*D_mod)
-source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod
+q_h=q_mod_total/(L_mod*pi*D_mod) # W/m^2
+source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod # W/(J/K)=K/s
 A_mod=[pi*D_mod**2/4]*n_mod
 Amod=pi*D_mod**2/4
 ds_mod=[L_mod/(n_mod*1.)]*n_mod
@@ -268,9 +268,17 @@ P_mod=[pi*D_mod]*n_mod
 x_mod=[L_right]*n_mod
 hc_mod = Nu*kt/D_mod
 
-Q_down2 = q_mod_total * (pi*((D_down2**2)/4)*L_down2)
+Q_down2 = q_mod_total * (pi*((D_down2**2)/4)*L_down2)  # W*m^3
+# calculate total heat deposited to down2
+# make it proportional to moderator total heat, by volume
+Q_down2=q_mod_total*(D_down2**2*L_down2)/(D_mod**2*L_mod) # W
+# heat per unit volume in either the moderator or this down2 tube
+Q_per_volume=q_mod_total/(pi*D_mod**2*L_mod/4)
 
-source_mod_down2=[4*Q_down2/(rho_0*cp)]*n_down2
+source_mod_down2=[Q_per_volume/(rho_0*cp)]*n_down2
+#source_mod_down2=[0.]*n_down2
+# (W/m^3)/((kg/m^3)*(J/(kg*K)))
+# K/s
 
 
 
@@ -400,7 +408,7 @@ def set_beam_current(curr):
 fRe=24.00*4
 Nu=4.8608 #or some constant, laminar case
 #hc=Nu*kt/D #will also be constant
-n_tsteps=400000
+n_tsteps=40000
 dt=.1 # s
 # consider adaptive time steps see Vijayan eq. (4.99)
 beam_cycle=240 # s
@@ -427,7 +435,7 @@ for tstep in range(0,n_tsteps):
         Rerise=D_rise*w/(Arise*mu)
         Releft=D_left*w/(Aleft*mu)
         Revalue.append(Re)
-        if Redown2 == 0:
+        if Redown2 < 0.00001:
             jh=0
         else :
             jh=0.023*Redown2**(-0.2)*B1
@@ -463,9 +471,9 @@ for tstep in range(0,n_tsteps):
     dw=(dt/Gamma)*(-friction_term-rho_integral) # Vijayan (4.25)
     w=w+dw
     if(t%beam_cycle<beam_on):
-        set_beam_current(40.)
+        set_beam_current(10.)
     else:
-        set_beam_current(0.)
+        set_beam_current(10.)
     sparse=1000 # sparseness of standard output
     if(tstep%sparse==0):
         print('This is time %f and w is %f'%(t,w))
@@ -488,6 +496,7 @@ for tstep in range(0,n_tsteps):
         #print(source_array)
         #print
     for nstep in range(0,n_hex):
+        Qw=0
         source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)*perimeter/P +Qw
 
 
