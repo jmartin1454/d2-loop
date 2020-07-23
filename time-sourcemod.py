@@ -6,7 +6,8 @@ import matplotlib.patches as patches
 import numpy as np
 from scipy import interpolate
 from scipy.misc import derivative
-
+from numpy import asarray
+from numpy import savetxt
 
 kt=0.104
 Nu=4.8608
@@ -230,14 +231,11 @@ P_right=[pi*D_right]*n_right
 x_right=[x*L_right/(n_right*1.) for x in range(0,n_right)]
 
 L_down2=0.5 # m, length to moderator vessel
-D_down2=0.5 # m
+D_down2=D_right # m
 Adown2=pi*D_down2**2/4
 n_down2=n_per
 T_down2=[T_initial]*n_down2
 s_down2=[L_hex+L_down+L_right+x*L_down2/(n_down2*1.) for x in range(0,n_down2)]
-hc_down2=Nu*kt/D_down2
-T_down2=[T_initial]*n_down2
-Tw=22 #K
 A_down2=[pi*D_down2**2/4]*n_down2
 ds_down2=[L_down2/(n_down2*1.)]*n_down2
 bottom_z=top_z_hex-L_hex-L_down
@@ -246,17 +244,21 @@ very_bottom_z=bottom_z-L_down2
 P_down2=[pi*D_down2]*n_down2
 #Grdown2 = (g*beta_t*rho**2*D_down2**3*(q_h*(L_hex+L_down)/(Adown2*mu*cp)))/(mu**2)
 x_down2=[L_right]*n_down2
-q_h_down2=q_mod_total/(L_down2*pi*D_down2)
-source_mod_down2=[4*hc_down2*(Tw-T_down2[x])/(D_down2*rho_0*cp) for x in range(0,n_down2)]
+
+
+
+
+Pr=(mu*cp)/(kt)
+B1=1.174*((3.7e-5)/(3.68e-5))**(0.14)
+
 
 L_mod=0.5 # m, length of right circular cylinder
 D_mod=0.5 # m, diameter
 n_mod=n_per
 T_mod=[T_initial]*n_mod
 s_mod=[L_hex+L_down+L_right+L_down2+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
-hc_mod=Nu*kt/D_mod
-T_mod=[T_initial]*n_mod
-Tw=22 #K
+q_h=q_mod_total/(L_mod*pi*D_mod)
+source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod
 A_mod=[pi*D_mod**2/4]*n_mod
 Amod=pi*D_mod**2/4
 ds_mod=[L_mod/(n_mod*1.)]*n_mod
@@ -264,8 +266,15 @@ z_mod=[very_bottom_z+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
 P_mod=[pi*D_mod]*n_mod
 #Grmod = (g*beta_t*rho**2*D_mod**3*(q_h*(L_hex+L_down)/(Amod*mu*cp)))/(mu**2)
 x_mod=[L_right]*n_mod
-q_h=q_mod_total/(L_mod*pi*D_mod)
-source_mod=[4*hc_mod*(Tw-T_mod[x])/(D_mod*rho_0*cp) for x in range(0,n_mod)]
+hc_mod = Nu*kt/D_mod
+
+Q_down2 = q_mod_total * (pi*((D_down2**2)/4)*L_down2)
+
+source_mod_down2=[4*Q_down2/(rho_0*cp)]*n_down2
+
+
+
+
 
 L_left=L_right # m, length to moderator vessel
 D_left=0.03175 # m
@@ -297,14 +306,15 @@ x_rise=[L_right-L_left]*n_rise
 
 T_array=np.array(T_hex+T_down+T_right+T_down2+T_mod+T_left+T_rise)
 n_array=len(T_array)
-source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod_down2+source_mod+[0.]*n_left+[0.]*n_rise
 A_array=np.array(A_hex+A_down+A_right+A_down2+A_mod+A_left+A_rise)
 P_array=np.array(P_hex+P_down+P_right+P_down2+P_mod+P_left+P_rise)
 s_array=np.array(s_hex+s_down+s_right+s_down2+s_mod+s_left+s_rise)
 z_array=np.array(z_hex+z_down+z_right+z_down2+z_mod+z_left+z_rise)
 ds_array=np.array(ds_hex+ds_down+ds_right+ds_down2+ds_mod+ds_left+ds_rise)
 x_array=np.array(x_hex+x_down+x_right+x_down2+x_mod+x_left+x_rise)
-print(n_array,T_array,source_array,x_array,s_array,z_array)
+#print(n_array,T_array,source_array,x_array,s_array,z_array)
+
+source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod_down2+source_mod+[0.]*n_left+[0.]*n_rise
 
 #Lt=L_hex+L_down+L_right+L_mod+L_left+L_rise
 #Dr=(1/Lt)*(Dh*L_hex + D_down*L_down + D_right*L_right + D_mod*L_mod + D_left*L_left + D_rise*L_rise)
@@ -396,28 +406,18 @@ dt=.1 # s
 beam_cycle=240 # s
 beam_on=60 # s
 alpha=kt/(rho_0*cp) #J/smk kgm2/ss2mK    kgm/s3K * 1/kg/m3 * 1/J/kgK
-# kgm m3 kg K / s3 K kg J     kg m4 s2/ s3 kg m2 m2 /s
 for tstep in range(0,n_tsteps):
     t=dt*tstep
-    #temp = interpolate.interp1d(ds_array, T_array)
     for nstep in range(0,n_array):
         dTemp=dt*(-(w/(A_array[nstep]*rho_0))*(T_array[nstep]-T_array[nstep-1])/ds_array[nstep]+source_array[nstep] + alpha*(((T_array[nstep]-T_array[nstep-1])/ds_array[nstep])-((T_array[nstep-1]-T_array[nstep-2])/ds_array[nstep-1]))/((ds_array[nstep]+ds_array[nstep-1])/2))
         T_array[nstep]=T_array[nstep]+dTemp
-    # update temperatures
-#    for nstep in range(0,n_array):
-    # update w
-    # rho integral
     rho_integral=0
     for nstep in range(0,n_array):
         rho_integral=rho_integral-rho_0*beta_t*g*T_array[nstep]*(z_array[nstep]-z_array[nstep-1])
-    # friction term
     foa2_sum=0.
     Gamma=0.
     for nstep in range(0,n_array):
-#        D=(4*A_array[nstep]/pi)**0.5
         D_h=4*A_array[nstep]/P_array[nstep]
-        #hc=Nu*kt/D_h
-#        Re=D_h*w/(A_array[nstep]*mu)
         Re=4*w/(P_array[nstep]*mu)
         Rehex=D_hex*w/(A*mu)
         Redown=D_down*w/(Adown*mu)
@@ -427,11 +427,16 @@ for tstep in range(0,n_tsteps):
         Rerise=D_rise*w/(Arise*mu)
         Releft=D_left*w/(Aleft*mu)
         Revalue.append(Re)
-#        Re_array=np.array(Rehex + Redown + Reright + Remod + Releft + Rerise)
-#        Re_array=np.around(Re_array)
-#        Re_array=Re_array.astype(int)
-        #f=64/Re # for small w, f~1/w -> infty, but w**2*f ~ w -> 0
-        # fRe=96 in laminar hex, maybe
+        if Redown2 == 0:
+            jh=0
+        else :
+            jh=0.023*Redown2**(-0.2)*B1
+        Nuturb=jh*Redown2*Pr**(1./3.)
+        hc_down2 = Nuturb*kt/D_down2
+        if hc_down2 == 0 :
+            Qw=0
+        else:
+            Qw =( T_array[47] - T_array[32]) / (1/(hc_mod*D_down2*L_down2) + 1/(hc_down2*D_down2*L_down2) + 1/(kt*L_down2))
         if w < 0.0000003:
             f = 0.03
         else :
@@ -483,10 +488,13 @@ for tstep in range(0,n_tsteps):
         #print(source_array)
         #print
     for nstep in range(0,n_hex):
-        source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)*perimeter/P
+        source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)*perimeter/P +Qw
 
 
 
+#savetxt('T_array.txt', T_array, delimiter=',')
+
+savetxt('w.txt', wvalue, delimiter=',')
 
 #print()
 ##print(Revalue)
@@ -544,7 +552,7 @@ plt.show()
 
 plt.plot(tvalue,Redown2value,'r:')
 plt.ylabel('Re')
-plt.title('Re as a Function of Time in the HEX t')
+plt.title('Re as a Function of Time in the down2 pipe t')
 plt.xlabel('Time (s)')
 plt.show()
 
@@ -560,12 +568,12 @@ plt.ylabel('Re')
 plt.title('Re as a Function of Time in the rising pipe t')
 plt.xlabel('Time (s)')
 plt.show()
-
-plt.plot(tvalue,Releftvalue,'r:')
-plt.ylabel('Re')
-plt.title('Re as a Function of Time in the left pipe t')
-plt.xlabel('Time (s)')
-plt.show()
+#
+#plt.plot(tvalue,Releftvalue,'r:')
+#plt.ylabel('Re')
+#plt.title('Re as a Function of Time in the left pipe t')
+#plt.xlabel('Time (s)')
+#plt.show()
 
 
 #plt.plot(Revalue,fvalue,'ro')

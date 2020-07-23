@@ -6,7 +6,8 @@ import matplotlib.patches as patches
 import numpy as np
 from scipy import interpolate
 from scipy.misc import derivative
-
+from numpy import asarray
+from numpy import savetxt
 
 kt=0.104
 Nu=4.8608
@@ -230,7 +231,7 @@ P_right=[pi*D_right]*n_right
 x_right=[x*L_right/(n_right*1.) for x in range(0,n_right)]
 
 L_down2=0.5 # m, length to moderator vessel
-D_down2=0.5 # m
+D_down2=L_right # m
 Adown2=pi*D_down2**2/4
 n_down2=n_per
 T_down2=[T_initial]*n_down2
@@ -291,7 +292,7 @@ x_rise=[L_right-L_left]*n_rise
 
 T_array=np.array(T_hex+T_down+T_right+T_down2+T_mod+T_left+T_rise)
 n_array=len(T_array)
-source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod_down2+source_mod+[0.]*n_left+[0.]*n_rise
+source_array=source_hex+[0.]*n_down+[0.]*n_right+[0.]*n_down2+source_mod+[0.]*n_left+[0.]*n_rise
 A_array=np.array(A_hex+A_down+A_right+A_down2+A_mod+A_left+A_rise)
 P_array=np.array(P_hex+P_down+P_right+P_down2+P_mod+P_left+P_rise)
 s_array=np.array(s_hex+s_down+s_right+s_down2+s_mod+s_left+s_rise)
@@ -480,7 +481,9 @@ for tstep in range(0,n_tsteps):
         source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)*perimeter/P
 
 
+#savetxt('T_array.txt', T_array, delimiter=',')
 
+savetxt('w.txt', wvalue, delimiter=',')
 
 #print()
 ##print(Revalue)
