@@ -257,8 +257,8 @@ D_mod=0.5 # m, diameter
 n_mod=n_per
 T_mod=[T_initial]*n_mod
 s_mod=[L_hex+L_down+L_right+L_down2+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
-q_h=q_mod_total/(L_mod*pi*D_mod) # W/m^2
-source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod # W/(J/K)=K/s
+q_h=q_mod_total/(L_mod*pi*D_mod/2) # W/m^2
+source_mod=[4*q_h/(D_mod*rho_0*cp/2)]*n_mod # W/(J/K)=K/s
 A_mod=[pi*D_mod**2/4]*n_mod
 Amod=pi*D_mod**2/4
 ds_mod=[L_mod/(n_mod*1.)]*n_mod
@@ -268,20 +268,22 @@ P_mod=[pi*D_mod]*n_mod
 x_mod=[L_right]*n_mod
 hc_mod = Nu*kt/D_mod
 
-Q_down2 = q_mod_total * (pi*((D_down2**2)/4)*L_down2)  # W*m^3
+#Q_down2 = q_mod_total * (pi*((D_down2**2)/4)*L_down2)  # W*m^3
 # calculate total heat deposited to down2
 # make it proportional to moderator total heat, by volume
-Q_down2=q_mod_total*(D_down2**2*L_down2)/(D_mod**2*L_mod) # W
+Q_down2=q_mod_total*(pi*D_down2**2*L_down2/4)/(pi*D_mod**2*L_mod/4) # W
 # heat per unit volume in either the moderator or this down2 tube
 Q_per_volume=q_mod_total/(pi*D_mod**2*L_mod/4)
 
-source_mod_down2=[Q_per_volume/(rho_0*cp)]*n_down2
+source_mod_down2=[4*Q_per_volume/(rho_0*cp)]*n_down2
 #source_mod_down2=[0.]*n_down2
 # (W/m^3)/((kg/m^3)*(J/(kg*K)))
 # K/s
 
-
-
+print(Q_down2)
+print(Q_down2/(pi*D_down2**2*L_down2/4))
+print(Q_per_volume)
+print(q_h/D_mod)
 
 
 L_left=L_right # m, length to moderator vessel
@@ -396,8 +398,12 @@ fvalue=[]
 # source_array where the moderator is
 def set_beam_current(curr):
     power=curr/40.*60. # W, constant of proportionality to power
-    q_h=power/(L_mod*pi*D_mod)
-    source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod
+#    q_h=power/(L_mod*pi*D_mod)
+#    source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod
+#    source_mod_down2=[4*Q_per_volume/(rho_0*cp)]*n_down2
+    for i in range(0,n_down2):
+        source_array[n_hex+n_down+n_right+i]=source_mod_down2[i]
+    return
     for i in range(0,n_mod):
         source_array[n_hex+n_down+n_right+n_down2+i]=source_mod[i]
     return
@@ -496,8 +502,9 @@ for tstep in range(0,n_tsteps):
         #print(source_array)
         #print
     for nstep in range(0,n_hex):
-        Qw=0
-        source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)*perimeter/P +Qw
+        source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)*perimeter/P
+#    for nstep in range(0,n_down2):
+#        source_array[nstep]=Qw
 
 
 
