@@ -257,8 +257,8 @@ D_mod=0.5 # m, diameter
 n_mod=n_per
 T_mod=[T_initial]*n_mod
 s_mod=[L_hex+L_down+L_right+L_down2+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
-q_h=q_mod_total/(L_mod*pi*D_mod/2) # W/m^2
-source_mod=[4*q_h/(D_mod*rho_0*cp/2)]*n_mod # W/(J/K)=K/s
+q_h=q_mod_total/(L_mod*pi*D_mod) # W/m^2
+source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod # W/(J/K)=K/s
 A_mod=[pi*D_mod**2/4]*n_mod
 Amod=pi*D_mod**2/4
 ds_mod=[L_mod/(n_mod*1.)]*n_mod
@@ -275,15 +275,20 @@ Q_down2=q_mod_total*(pi*D_down2**2*L_down2/4)/(pi*D_mod**2*L_mod/4) # W
 # heat per unit volume in either the moderator or this down2 tube
 Q_per_volume=q_mod_total/(pi*D_mod**2*L_mod/4)
 
-source_mod_down2=[4*Q_per_volume/(rho_0*cp)]*n_down2
+source_mod_down2=[Q_per_volume/(rho_0*cp)]*n_down2
 #source_mod_down2=[0.]*n_down2
 # (W/m^3)/((kg/m^3)*(J/(kg*K)))
 # K/s
+source_mod_down2[0]=0
+source_mod_down2[1]=0
+source_mod_down2[2]=0
+source_mod_down2[3]=0
+
 
 print(Q_down2)
 print(Q_down2/(pi*D_down2**2*L_down2/4))
 print(Q_per_volume)
-print(q_h/D_mod)
+print(4*q_h/D_mod)
 
 
 L_left=L_right # m, length to moderator vessel
@@ -414,16 +419,21 @@ def set_beam_current(curr):
 fRe=24.00*4
 Nu=4.8608 #or some constant, laminar case
 #hc=Nu*kt/D #will also be constant
-n_tsteps=40000
+n_tsteps=100000
 dt=.1 # s
 # consider adaptive time steps see Vijayan eq. (4.99)
 beam_cycle=240 # s
 beam_on=60 # s
 alpha=kt/(rho_0*cp) #J/smk kgm2/ss2mK    kgm/s3K * 1/kg/m3 * 1/J/kgK
+alpha=0
 for tstep in range(0,n_tsteps):
     t=dt*tstep
     for nstep in range(0,n_array):
-        dTemp=dt*(-(w/(A_array[nstep]*rho_0))*(T_array[nstep]-T_array[nstep-1])/ds_array[nstep]+source_array[nstep] + alpha*(((T_array[nstep]-T_array[nstep-1])/ds_array[nstep])-((T_array[nstep-1]-T_array[nstep-2])/ds_array[nstep-1]))/((ds_array[nstep]+ds_array[nstep-1])/2))
+        if(nstep==0):
+            ds=ds_array[0]
+        else:
+            ds=s_array[nstep]-s_array[nstep-1]
+        dTemp=dt*(-(w/(A_array[nstep]*rho_0))*(T_array[nstep]-T_array[nstep-1])/ds+source_array[nstep] + alpha*(((T_array[nstep]-T_array[nstep-1])/ds_array[nstep])-((T_array[nstep-1]-T_array[nstep-2])/ds_array[nstep-1]))/((ds_array[nstep]+ds_array[nstep-1])/2))
         T_array[nstep]=T_array[nstep]+dTemp
     rho_integral=0
     for nstep in range(0,n_array):
@@ -432,14 +442,14 @@ for tstep in range(0,n_tsteps):
     Gamma=0.
     for nstep in range(0,n_array):
         D_h=4*A_array[nstep]/P_array[nstep]
-        Re=4*w/(P_array[nstep]*mu)
-        Rehex=D_hex*w/(A*mu)
-        Redown=D_down*w/(Adown*mu)
-        Reright=D_right*w/(Aright*mu)
-        Redown2=D_down2*w/(Adown2*mu)
-        Remod=D_mod*w/(Amod*mu)
-        Rerise=D_rise*w/(Arise*mu)
-        Releft=D_left*w/(Aleft*mu)
+        Re=abs(4*w/(P_array[nstep]*mu))
+        Rehex=abs(D_hex*w/(A*mu))
+        Redown=abs(D_down*w/(Adown*mu))
+        Reright=abs(D_right*w/(Aright*mu))
+        Redown2=abs(D_down2*w/(Adown2*mu))
+        Remod=abs(D_mod*w/(Amod*mu))
+        Rerise=abs(D_rise*w/(Arise*mu))
+        Releft=abs(D_left*w/(Aleft*mu))
         Revalue.append(Re)
         if Redown2 < 0.00001:
             jh=0
@@ -455,7 +465,7 @@ for tstep in range(0,n_tsteps):
             f = 0.03
         else :
             if Re < 2300 :
-                f=fRe/Re
+                f=abs(fRe/Re)
                 #f=64/Re #assuming cicular tube
         #              print('The laminar friction factor is %f.' %f)
             elif 3500 > Re > 2300 :
