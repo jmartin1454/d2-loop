@@ -124,7 +124,7 @@ cp=6565. # J/(kg-K), specific heat capacity of LD2
  # W/(m^2-K), heat transfer coefficient in HEX
 
 T_cold=19.8 # K
-T_initial=T_cold
+T_initial=T_cold+0.3
 
 n_per=10
 
@@ -279,11 +279,11 @@ source_mod_down2=[Q_per_volume/(rho_0*cp)]*n_down2
 #source_mod_down2=[0.]*n_down2
 # (W/m^3)/((kg/m^3)*(J/(kg*K)))
 # K/s
-source_mod_down2[0]=0
-source_mod_down2[1]=0
-source_mod_down2[2]=0
-source_mod_down2[3]=0
-
+# used to artificially reduce heat in down2 section
+#source_mod_down2[0]=0
+#source_mod_down2[1]=0
+#source_mod_down2[2]=0
+#
 
 print(Q_down2)
 print(Q_down2/(pi*D_down2**2*L_down2/4))
@@ -402,13 +402,11 @@ fvalue=[]
 # sets the beam current, by modifying the appropriate portion of the
 # source_array where the moderator is
 def set_beam_current(curr):
-    power=curr/40.*60. # W, constant of proportionality to power
-#    q_h=power/(L_mod*pi*D_mod)
-#    source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod
-#    source_mod_down2=[4*Q_per_volume/(rho_0*cp)]*n_down2
+    fractional_power=curr/10. # dimensionless, normalized to 10 uA
+    source_mod=[Q_per_volume*fractional_power/(rho_0*cp)]*n_mod
+    source_mod_down2=[Q_per_volume*fractional_power/(rho_0*cp)]*n_down2
     for i in range(0,n_down2):
         source_array[n_hex+n_down+n_right+i]=source_mod_down2[i]
-    return
     for i in range(0,n_mod):
         source_array[n_hex+n_down+n_right+n_down2+i]=source_mod[i]
     return
@@ -425,9 +423,21 @@ dt=.1 # s
 beam_cycle=240 # s
 beam_on=60 # s
 alpha=kt/(rho_0*cp) #J/smk kgm2/ss2mK    kgm/s3K * 1/kg/m3 * 1/J/kgK
-alpha=0
+# alpha=0 # used to test possible oddities due to alpha
 for tstep in range(0,n_tsteps):
     t=dt*tstep
+
+    # set beam current
+    #if(t%beam_cycle<beam_on):
+    #    set_beam_current(10.)
+    #else:
+    #    set_beam_current(10.)
+    if(t>5000):
+        set_beam_current(10.)
+    else:
+        set_beam_current(0.)
+
+        
     for nstep in range(0,n_array):
         if(nstep==0):
             ds=ds_array[0]
@@ -486,10 +496,6 @@ for tstep in range(0,n_tsteps):
     # dw step
     dw=(dt/Gamma)*(-friction_term-rho_integral) # Vijayan (4.25)
     w=w+dw
-    if(t%beam_cycle<beam_on):
-        set_beam_current(10.)
-    else:
-        set_beam_current(10.)
     sparse=1000 # sparseness of standard output
     if(tstep%sparse==0):
         print('This is time %f and w is %f'%(t,w))
