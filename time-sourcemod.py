@@ -423,7 +423,7 @@ dt=.1 # s
 beam_cycle=240 # s
 beam_on=60 # s
 alpha=kt/(rho_0*cp) #J/smk kgm2/ss2mK    kgm/s3K * 1/kg/m3 * 1/J/kgK
-# alpha=0 # used to test possible oddities due to alpha
+# alpha=0 # used to test possible oddities due to longitudinal conduction
 for tstep in range(0,n_tsteps):
     t=dt*tstep
 
