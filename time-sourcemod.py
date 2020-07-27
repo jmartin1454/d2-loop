@@ -336,6 +336,10 @@ source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod_down2+source_mod+[0.
 #Ng=(Lt/Dr)*()
 
 
+#Tot_vol = (A*L_hex) + (pi*D_down**2*L_down/4) + (pi*D_right**2*L_right/4) + (pi*D_down2**2*L_down2/4) + (pi*D_mod**2*L_mod/4) + (pi*D_left**2*L_left/4) + (pi*D_rise**2*L_rise/4)
+#print('total vol is %f m3' %Tot_vol )
+
+
 # graphs of geometry
 plt.title('The Cross Section of the Heat Exchanger.')
 plt.show()
@@ -362,8 +366,6 @@ plt.title('Loop')
 plt.ylabel('Vertical Position (m)')
 plt.xlabel('Horizontal Position (m)')
 plt.show()
-
-
 
 
 wvalue=[]
