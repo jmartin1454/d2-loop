@@ -124,7 +124,7 @@ cp=6565. # J/(kg-K), specific heat capacity of LD2
  # W/(m^2-K), heat transfer coefficient in HEX
 
 T_cold=19.8 # K
-T_initial=T_cold+0.3
+T_initial=T_cold
 
 n_per=10
 
@@ -201,7 +201,7 @@ z_hex=[top_z_hex-x*L_hex/(n_hex*1.) for x in range(0,n_hex)]
 #Grhex= (g*beta_t*rho**2*Dh**3*(q_h*(L_hex+L_down)/(A*mu*cp)))/(mu**2)
 x_hex=[0.0]*n_hex
 
-L_down=1.937 # m, length of downcomer
+L_down=1.496 # m, length of downcomer
 D_down=0.0134 # m, diameter of downcomer
 n_down=n_per
 T_down=[T_initial]*n_down
@@ -216,7 +216,7 @@ P_down=[pi*D_down]*n_down
 x_down=[0.0]*n_down
 
 
-L_right=(1.27+0.8) # m, length to moderator vessel
+L_right=0.75 # m, length to moderator vessel
 D_right=0.0134 # m
 Aright=pi*D_right**2/4
 n_right=n_per
@@ -230,114 +230,92 @@ P_right=[pi*D_right]*n_right
 #Grright = (g*beta_t*rho**2*D_right**3*(q_h*(L_hex+L_down)/(Aright*mu*cp)))/(mu**2)
 x_right=[x*L_right/(n_right*1.) for x in range(0,n_right)]
 
-L_down2=0.5 # m, length to moderator vessel
-D_down2=D_right # m
-Adown2=pi*D_down2**2/4
-n_down2=n_per
-T_down2=[T_initial]*n_down2
-s_down2=[L_hex+L_down+L_right+x*L_down2/(n_down2*1.) for x in range(0,n_down2)]
-A_down2=[pi*D_down2**2/4]*n_down2
-ds_down2=[L_down2/(n_down2*1.)]*n_down2
-bottom_z=top_z_hex-L_hex-L_down
-z_down2=[bottom_z-x*L_down2/(n_down2*1.) for x in range(0,n_down2)]
-very_bottom_z=bottom_z-L_down2
-P_down2=[pi*D_down2]*n_down2
-#Grdown2 = (g*beta_t*rho**2*D_down2**3*(q_h*(L_hex+L_down)/(Adown2*mu*cp)))/(mu**2)
-x_down2=[L_right]*n_down2
-
-
-
-
-Pr=(mu*cp)/(kt)
-B1=1.174*((3.7e-5)/(3.68e-5))**(0.14)
-
 
 L_mod=0.5 # m, length of right circular cylinder
 D_mod=0.5 # m, diameter
 n_mod=n_per
 T_mod=[T_initial]*n_mod
-s_mod=[L_hex+L_down+L_right+L_down2+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
+s_mod=[L_hex+L_down+L_right+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
 q_h=q_mod_total/(L_mod*pi*D_mod) # W/m^2
 source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod # W/(J/K)=K/s
 A_mod=[pi*D_mod**2/4]*n_mod
 Amod=pi*D_mod**2/4
 ds_mod=[L_mod/(n_mod*1.)]*n_mod
-z_mod=[very_bottom_z+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
+z_mod=[bottom_z]*n_mod
 P_mod=[pi*D_mod]*n_mod
 #Grmod = (g*beta_t*rho**2*D_mod**3*(q_h*(L_hex+L_down)/(Amod*mu*cp)))/(mu**2)
-x_mod=[L_right]*n_mod
+x_mod=[L_right+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
 hc_mod = Nu*kt/D_mod
 
-#Q_down2 = q_mod_total * (pi*((D_down2**2)/4)*L_down2)  # W*m^3
-# calculate total heat deposited to down2
-# make it proportional to moderator total heat, by volume
-Q_down2=q_mod_total*(pi*D_down2**2*L_down2/4)/(pi*D_mod**2*L_mod/4) # W
-# heat per unit volume in either the moderator or this down2 tube
-Q_per_volume=q_mod_total/(pi*D_mod**2*L_mod/4)
-
-source_mod_down2=[Q_per_volume/(rho_0*cp)]*n_down2
-#source_mod_down2=[0.]*n_down2
-# (W/m^3)/((kg/m^3)*(J/(kg*K)))
-# K/s
-# used to artificially reduce heat in down2 section
-#source_mod_down2[0]=0
-#source_mod_down2[1]=0
-#source_mod_down2[2]=0
-#
-
-print(Q_down2)
-print(Q_down2/(pi*D_down2**2*L_down2/4))
-print(Q_per_volume)
-print(4*q_h/D_mod)
-
-
-L_left=L_right # m, length to moderator vessel
-D_left=0.03175 # m
-n_left=n_per
-T_left=[T_initial]*n_left
-s_left=[L_hex+L_down+L_right+L_down2+L_mod+x*L_left/(n_left*1.) for x in range(0,n_left)]
-A_left=[pi*D_left**2/4]*n_left
-Aleft=pi*D_left**2/4
-ds_left=[L_left/(n_left*1.)]*n_left
-z_left=[bottom_z]*n_left
-P_left=[pi*D_left]*n_left
-#Grleft = (g*beta_t*rho**2*D_left**3*(q_h*(L_hex+L_down)/(Aleft*mu*cp)))/(mu**2)
-x_left=[L_right-x*L_left/(n_left*1.) for x in range(0,n_left)]
+L_right2=0.75 # m, length to moderator vessel
+D_right2=0.0134 # m
+Aright2=pi*D_right2**2/4
+n_right2=n_per
+T_right2=[T_initial]*n_right2
+s_right2=[L_hex+L_down+L_mod+x*L_right2/(n_right2*1.) for x in range(0,n_right2)]
+A_right2=[pi*D_right2**2/4]*n_right2
+ds_right2=[L_right2/(n_right2*1.)]*n_right2
+z_right2=[bottom_z]*n_right2
+P_right2=[pi*D_right2]*n_right2
+#Grright = (g*beta_t*rho**2*D_right**3*(q_h*(L_hex+L_down)/(Aright*mu*cp)))/(mu**2)
+x_right2=[L_right+L_mod+x*L_right2/(n_right2*1.) for x in range(0,n_right2)]
 
 
 
-L_rise=L_hex+L_down #top_z_hex-bottom_z-L_mod # m, height of rise
+L_rise=2 #top_z_hex-bottom_z-L_mod # m, height of rise
 D_rise=0.03175 # m, diameter
 n_rise=n_per
 T_rise=[T_initial]*n_rise
-s_rise=[L_hex+L_down+L_right+L_down2+L_mod+L_left+x*L_rise/(n_rise*1.) for x in range(0,n_rise)]
+s_rise=[L_hex+L_down+L_right+L_mod+L_right2+x*L_rise/(n_rise*1.) for x in range(0,n_rise)]
 A_rise=[pi*D_rise**2/4]*n_rise
 Arise=pi*D_rise**2/4
 ds_rise=[L_rise/(n_rise*1.)]*n_rise
 z_rise=[bottom_z+x*L_rise/(n_rise*1.) for x in range(0,n_rise)]
 P_rise=[pi*D_rise]*n_rise
 #Grrise = (g*beta_t*rho**2*D_rise**3*(q_h*(L_hex+L_down)/(Arise*mu*cp)))/(mu**2)
-x_rise=[L_right-L_left]*n_rise
+x_rise=[L_right+L_mod+L_right2]*n_rise
 
-T_array=np.array(T_hex+T_down+T_right+T_down2+T_mod+T_left+T_rise)
+L_left=2 # m, length to moderator vessel
+D_left=0.03175 # m
+n_left=n_per
+T_left=[T_initial]*n_left
+s_left=[L_hex+L_down+L_right+L_mod+L_right2+L_rise+x*L_left/(n_left*1.) for x in range(0,n_left)]
+A_left=[pi*D_left**2/4]*n_left
+Aleft=pi*D_left**2/4
+ds_left=[L_left/(n_left*1.)]*n_left
+z_left=[bottom_z+L_rise]*n_left
+P_left=[pi*D_left]*n_left
+#Grleft = (g*beta_t*rho**2*D_left**3*(q_h*(L_hex+L_down)/(Aleft*mu*cp)))/(mu**2)
+x_left=[L_right+L_mod+L_right2-x*L_left/(n_left*1.) for x in range(0,n_left)]
+
+#L_down2=0.25 # m, length of downcomer
+#D_down2=0.0134 # m, diameter of downcomer
+#n_down2=n_per
+#T_down2=[T_initial]*n_down2
+#s_down2=[L_hex+L_down+L_right+L_mod+L_right2+L_rise+L_left+x*L_down2/(n_down2*1.) for x in range(0,n_down2)]
+#Adown2=pi*D_down2**2/4
+#A_down2=[pi*D_down2**2/4]*n_down2
+#ds_down2=[L_down2/(n_down2*1.)]*n_down2
+#top_z_down2=top_z_hex-L_hex
+#z_down2=[top_z_down2-x*L_down2/(n_down2*1.) for x in range(0,n_down2)]
+#P_down2=[pi*D_down2]*n_down2
+##Grdown = (g*beta_t*rho**2*D_down**3*(q_h*(L_hex+L_down)/(Adown*mu*cp)))/(mu**2)
+#x_down2=[0.0]*n_down2
+
+
+
+T_array=np.array(T_hex+T_down+T_right+T_mod+T_right2+T_rise+T_left)#+T_down2)
 n_array=len(T_array)
-A_array=np.array(A_hex+A_down+A_right+A_down2+A_mod+A_left+A_rise)
-P_array=np.array(P_hex+P_down+P_right+P_down2+P_mod+P_left+P_rise)
-s_array=np.array(s_hex+s_down+s_right+s_down2+s_mod+s_left+s_rise)
-z_array=np.array(z_hex+z_down+z_right+z_down2+z_mod+z_left+z_rise)
-ds_array=np.array(ds_hex+ds_down+ds_right+ds_down2+ds_mod+ds_left+ds_rise)
-x_array=np.array(x_hex+x_down+x_right+x_down2+x_mod+x_left+x_rise)
+A_array=np.array(A_hex+A_down+A_right+A_mod+A_right2+A_rise+A_left)#+A_down2)
+P_array=np.array(P_hex+P_down+P_right+P_mod+P_right2+P_rise+P_left)#+P_down2)
+s_array=np.array(s_hex+s_down+s_right+s_mod+s_right2+s_rise+s_left)#+s_down2)
+z_array=np.array(z_hex+z_down+z_right+z_mod+z_right2+z_rise+z_left)#+z_down2)
+ds_array=np.array(ds_hex+ds_down+ds_right+ds_mod+ds_right2+ds_rise+ds_left)#+ds_down2)
+x_array=np.array(x_hex+x_down+x_right+x_mod+x_right2+x_rise+x_left)#+x_down2)
 #print(n_array,T_array,source_array,x_array,s_array,z_array)
 
-source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod_down2+source_mod+[0.]*n_left+[0.]*n_rise
+source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod+[0.]*n_right2+[0.]*n_rise+[0.]*n_left#+[0.]*n_down2
 
-#Lt=L_hex+L_down+L_right+L_mod+L_left+L_rise
-#Dr=(1/Lt)*(Dh*L_hex + D_down*L_down + D_right*L_right + D_mod*L_mod + D_left*L_left + D_rise*L_rise)
-#Ng=(Lt/Dr)*()
-
-
-Tot_vol = (A*L_hex) + (pi*D_down**2*L_down/4) + (pi*D_right**2*L_right/4) + (pi*D_down2**2*L_down2/4) + (pi*D_mod**2*L_mod/4) + (pi*D_left**2*L_left/4) + (pi*D_rise**2*L_rise/4)
-print('total vol is %f m3' %Tot_vol )
 
 
 # graphs of geometry
@@ -345,13 +323,6 @@ plt.title('The Cross Section of the Heat Exchanger.')
 plt.show()
 
 
-#plt.title('The Loop Geometry.')
-#line=plt.plot([0,0],[L_down,0],color='blue')
-#line=plt.plot([0,L_right],[0,0],color='blue')
-#line=plt.plot([L_right,L_right],[0,L_mod],color='black')
-#line=plt.plot([L_right,0.25],[L_mod,L_mod],color='red')
-#line=plt.plot([0.25,0.25],[L_mod,L_rise],color='red')
-#plt.show()
 
 plt.plot(s_array,z_array,'b:')
 #plt.plot(T1,'r:')
@@ -366,6 +337,8 @@ plt.title('Loop')
 plt.ylabel('Vertical Position (m)')
 plt.xlabel('Horizontal Position (m)')
 plt.show()
+
+
 
 
 wvalue=[]
@@ -404,13 +377,15 @@ fvalue=[]
 # sets the beam current, by modifying the appropriate portion of the
 # source_array where the moderator is
 def set_beam_current(curr):
-    fractional_power=curr/10. # dimensionless, normalized to 10 uA
-    source_mod=[Q_per_volume*fractional_power/(rho_0*cp)]*n_mod
-    source_mod_down2=[Q_per_volume*fractional_power/(rho_0*cp)]*n_down2
-    for i in range(0,n_down2):
-        source_array[n_hex+n_down+n_right+i]=source_mod_down2[i]
+    power=curr/40.*60. # W, constant of proportionality to power
+#    q_h=power/(L_mod*pi*D_mod)
+#    source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod
+#    source_mod_down2=[4*Q_per_volume/(rho_0*cp)]*n_down2
+#    for i in range(0,n_down2):
+#        source_array[n_hex+n_down+n_right+i]=source_mod_down2[i]
+#    return
     for i in range(0,n_mod):
-        source_array[n_hex+n_down+n_right+n_down2+i]=source_mod[i]
+        source_array[n_hex+n_down+n_right+i]=source_mod[i]
     return
 
 
@@ -419,27 +394,15 @@ def set_beam_current(curr):
 fRe=24.00*4
 Nu=4.8608 #or some constant, laminar case
 #hc=Nu*kt/D #will also be constant
-n_tsteps=400000
+n_tsteps=40000
 dt=.1 # s
 # consider adaptive time steps see Vijayan eq. (4.99)
 beam_cycle=240 # s
 beam_on=60 # s
 alpha=kt/(rho_0*cp) #J/smk kgm2/ss2mK    kgm/s3K * 1/kg/m3 * 1/J/kgK
-# alpha=0 # used to test possible oddities due to longitudinal conduction
+alpha=0
 for tstep in range(0,n_tsteps):
     t=dt*tstep
-
-    # set beam current
-    #if(t%beam_cycle<beam_on):
-    #    set_beam_current(10.)
-    #else:
-    #    set_beam_current(10.)
-    if(t==0):
-        set_beam_current(10.)
-    else:
-        set_beam_current(0.)
-
-        
     for nstep in range(0,n_array):
         if(nstep==0):
             ds=ds_array[0]
@@ -458,21 +421,21 @@ for tstep in range(0,n_tsteps):
         Rehex=abs(D_hex*w/(A*mu))
         Redown=abs(D_down*w/(Adown*mu))
         Reright=abs(D_right*w/(Aright*mu))
-        Redown2=abs(D_down2*w/(Adown2*mu))
+#        Redown2=abs(D_down2*w/(Adown2*mu))
         Remod=abs(D_mod*w/(Amod*mu))
         Rerise=abs(D_rise*w/(Arise*mu))
         Releft=abs(D_left*w/(Aleft*mu))
         Revalue.append(Re)
-        if Redown2 < 0.00001:
-            jh=0
-        else :
-            jh=0.023*Redown2**(-0.2)*B1
-        Nuturb=jh*Redown2*Pr**(1./3.)
-        hc_down2 = Nuturb*kt/D_down2
-        if hc_down2 == 0 :
-            Qw=0
-        else:
-            Qw =( T_array[47] - T_array[32]) / (1/(hc_mod*D_down2*L_down2) + 1/(hc_down2*D_down2*L_down2) + 1/(kt*L_down2))
+#        if Redown2 < 0.00001:
+#            jh=0
+#        else :
+#            jh=0.023*Redown2**(-0.2)*B1
+#        Nuturb=jh*Redown2*Pr**(1./3.)
+#        hc_down2 = Nuturb*kt/D_down2
+#        if hc_down2 == 0 :
+#            Qw=0
+#        else:
+#            Qw =( T_array[47] - T_array[32]) / (1/(hc_mod*D_down2*L_down2) + 1/(hc_down2*D_down2*L_down2) + 1/(kt*L_down2))
         if w < 0.0000003:
             f = 0.03
         else :
@@ -498,6 +461,10 @@ for tstep in range(0,n_tsteps):
     # dw step
     dw=(dt/Gamma)*(-friction_term-rho_integral) # Vijayan (4.25)
     w=w+dw
+    if(t%beam_cycle<beam_on):
+        set_beam_current(10.)
+    else:
+        set_beam_current(10.)
     sparse=1000 # sparseness of standard output
     if(tstep%sparse==0):
         print('This is time %f and w is %f'%(t,w))
@@ -512,7 +479,7 @@ for tstep in range(0,n_tsteps):
         Rehexvalue.append(Rehex)
         Redownvalue.append(Redown)
         Rerightvalue.append(Reright)
-        Redown2value.append(Redown2)
+#        Redown2value.append(Redown2)
         Remodvalue.append(Remod)
         Rerisevalue.append(Rerise)
         Releftvalue.append(Releft)
@@ -581,12 +548,6 @@ plt.show()
 plt.plot(tvalue,Rerightvalue,'r:')
 plt.ylabel('Re')
 plt.title('Re as a Function of Time in the right pipe t')
-plt.xlabel('Time (s)')
-plt.show()
-
-plt.plot(tvalue,Redown2value,'r:')
-plt.ylabel('Re')
-plt.title('Re as a Function of Time in the down2 pipe t')
 plt.xlabel('Time (s)')
 plt.show()
 
@@ -661,6 +622,7 @@ Nu=4.8608 #or some constant, laminar case
 hc=Nu*kt/D #will also be constant
 # in turbulent case, need Re to be calculated.
 source_array[nstep]=-4*hc*(T_array[nstep]-T_cold)/(D_hex*rho_0*cp)
+
 
 
 
