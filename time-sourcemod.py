@@ -336,8 +336,8 @@ source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod_down2+source_mod+[0.
 #Ng=(Lt/Dr)*()
 
 
-#Tot_vol = (A*L_hex) + (pi*D_down**2*L_down/4) + (pi*D_right**2*L_right/4) + (pi*D_down2**2*L_down2/4) + (pi*D_mod**2*L_mod/4) + (pi*D_left**2*L_left/4) + (pi*D_rise**2*L_rise/4)
-#print('total vol is %f m3' %Tot_vol )
+Tot_vol = (A*L_hex) + (pi*D_down**2*L_down/4) + (pi*D_right**2*L_right/4) + (pi*D_down2**2*L_down2/4) + (pi*D_mod**2*L_mod/4) + (pi*D_left**2*L_left/4) + (pi*D_rise**2*L_rise/4)
+print('total vol is %f m3' %Tot_vol )
 
 
 # graphs of geometry
@@ -419,7 +419,7 @@ def set_beam_current(curr):
 fRe=24.00*4
 Nu=4.8608 #or some constant, laminar case
 #hc=Nu*kt/D #will also be constant
-n_tsteps=100000
+n_tsteps=400000
 dt=.1 # s
 # consider adaptive time steps see Vijayan eq. (4.99)
 beam_cycle=240 # s
@@ -434,7 +434,7 @@ for tstep in range(0,n_tsteps):
     #    set_beam_current(10.)
     #else:
     #    set_beam_current(10.)
-    if(t>5000):
+    if(t==0):
         set_beam_current(10.)
     else:
         set_beam_current(0.)
