@@ -124,7 +124,7 @@ cp=6565. # J/(kg-K), specific heat capacity of LD2
  # W/(m^2-K), heat transfer coefficient in HEX
 
 T_cold=19.8 # K
-T_initial=T_cold+0.3
+T_initial=T_cold+0.1
 
 n_per=10
 
@@ -430,14 +430,14 @@ for tstep in range(0,n_tsteps):
     t=dt*tstep
 
     # set beam current
-    #if(t%beam_cycle<beam_on):
-    #    set_beam_current(10.)
-    #else:
-    #    set_beam_current(10.)
-    if(t==0):
-        set_beam_current(10.)
+    if(t%beam_cycle<beam_on):
+        set_beam_current(40.)
     else:
         set_beam_current(0.)
+#    if(t>5000):
+#        set_beam_current(10.)
+#    else:
+#        set_beam_current(0.)
 
         
     for nstep in range(0,n_array):
