@@ -257,7 +257,7 @@ Vts=0.102318 #m
 
 Vtank = (Vts*(rho_cold-rho_293))*(1/(rho_293-rho_cold293))
 
-print(Vtank)
+print('Vol tank is %f m3.' %Vtank)
 
 Tcold=20 #K
 Thot=293 #K
@@ -276,9 +276,19 @@ plt.text(22.5, 1.25e6, 'liquid', rotation = 45)
 plt.text(35, 5e4, 'gas', rotation = 45)
 plt.show()
 
+
+
+
+Psat = ((Vts+Vtank)*rho_cold293)*(1/((Vtank+Vts)*2/(1000*8.314*293)))
+
+
+print('Psat is %f psia' %(Psat/6894.76))
+print('Psat is %f Pa' %(Psat))
+
+
 #From there pick Psat off of graph and plug in for p
 
-p= 0.6e6 # Pa
+p= 222033.753684 # Pa
 
 Tsat=CP.PropsSI('T','P',p,'Q',1,fluid) #from cool prop
 print()
