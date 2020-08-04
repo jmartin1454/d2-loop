@@ -13,6 +13,20 @@ kt=0.104
 Nu=4.8608
 mu=3.5e-5
 
+##############################################
+# material parameters for some walls
+# https://trc.nist.gov/cryogenics/calculators/propcalc.html
+##############################################
+# 304 stainless steel
+rho_steel=7850 # kg/m^3
+kt_steel=2.169 # W/(m*K)
+cp_steel=13.452 # J/(kg*K)
+# 6061-T6 Al
+rho_al=2700 # kg/m^3
+kt_al=28.428 # W/(m*K)
+cp_al=8.854 # J/(kg*K)
+
+
 g=9.8 # m/s^2
 beta_t=.012 # K^(-1), relative slope of density with temperature (a la
             # Boussinesq)
@@ -21,8 +35,7 @@ T_0=21.
 def rho(T):
 
     return 220.82-(T/2.4506) # kg/m^3
-    
-    
+
 #rel bt density and temp found by taking the plot of T as a fun of den from coolprop values
 
 #T = -2.4506rho + 220.82
@@ -201,6 +214,17 @@ z_hex=[top_z_hex-x*L_hex/(n_hex*1.) for x in range(0,n_hex)]
 #Grhex= (g*beta_t*rho**2*Dh**3*(q_h*(L_hex+L_down)/(A*mu*cp)))/(mu**2)
 x_hex=[0.0]*n_hex
 
+##############################################
+# HEX stainless wall parameters
+##############################################
+ID_HEX_wall=d2 # wall ID
+thick_HEX_wall=(5-d2)/2 # wall thickness, guess 5" OD
+T_HEX_wall=[T_initial]*n_hex
+
+##############################################
+# 1st downcomer geometry
+##############################################
+
 L_down=1.937 # m, length of downcomer
 D_down=0.0134 # m, diameter of downcomer
 n_down=n_per
@@ -215,6 +239,15 @@ P_down=[pi*D_down]*n_down
 #Grdown = (g*beta_t*rho**2*D_down**3*(q_h*(L_hex+L_down)/(Adown*mu*cp)))/(mu**2)
 x_down=[0.0]*n_down
 
+##############################################
+# 1st downcomer wall parameters
+##############################################
+# guess schedule 10, with wall thickness of 0.065 inches
+thick_down_wall=0.065*0.0254 # m
+
+##############################################
+# right section going over to moderator
+##############################################
 
 L_right=(1.27+0.8) # m, length to moderator vessel
 D_right=0.0134 # m
@@ -230,6 +263,15 @@ P_right=[pi*D_right]*n_right
 #Grright = (g*beta_t*rho**2*D_right**3*(q_h*(L_hex+L_down)/(Aright*mu*cp)))/(mu**2)
 x_right=[x*L_right/(n_right*1.) for x in range(0,n_right)]
 
+##############################################
+# right going wall parameters
+##############################################
+# guess schedule 10, with wall thickness of 0.065 inches
+thick_right_wall=0.065*0.0254 # m
+
+##############################################
+# 2nd downcomer within moderator volume
+##############################################
 L_down2=0.5 # m, length to moderator vessel
 D_down2=D_right # m
 Adown2=pi*D_down2**2/4
@@ -245,13 +287,19 @@ P_down2=[pi*D_down2]*n_down2
 #Grdown2 = (g*beta_t*rho**2*D_down2**3*(q_h*(L_hex+L_down)/(Adown2*mu*cp)))/(mu**2)
 x_down2=[L_right]*n_down2
 
-
-
-
+# orphaned declarations
 Pr=(mu*cp)/(kt)
 B1=1.174*((3.7e-5)/(3.68e-5))**(0.14)
 
+##############################################
+# 2nd downcomer wall parameters
+##############################################
+# guess schedule 10, with wall thickness of 0.065 inches
+thick_down2_wall=0.065*0.0254 # m, guess Al
 
+##############################################
+# moderator volume
+##############################################
 L_mod=0.5 # m, length of right circular cylinder
 D_mod=0.5 # m, diameter
 n_mod=n_per
@@ -268,8 +316,15 @@ P_mod=[pi*D_mod]*n_mod
 x_mod=[L_right]*n_mod
 hc_mod = Nu*kt/D_mod
 
-#Q_down2 = q_mod_total * (pi*((D_down2**2)/4)*L_down2)  # W*m^3
-# calculate total heat deposited to down2
+##############################################
+# moderator wall parameters
+##############################################
+thick_mod_wall=0.065*0.0254 # m, guess Al
+
+##############################################
+# calculate total heat deposited to down2 based on proportional heat
+# in moderator
+##############################################
 # make it proportional to moderator total heat, by volume
 Q_down2=q_mod_total*(pi*D_down2**2*L_down2/4)/(pi*D_mod**2*L_mod/4) # W
 # heat per unit volume in either the moderator or this down2 tube
@@ -283,13 +338,16 @@ source_mod_down2=[Q_per_volume/(rho_0*cp)]*n_down2
 #source_mod_down2[0]=0
 #source_mod_down2[1]=0
 #source_mod_down2[2]=0
-#
 
-print(Q_down2)
-print(Q_down2/(pi*D_down2**2*L_down2/4))
-print(Q_per_volume)
-print(4*q_h/D_mod)
+#print(Q_down2)
+#print(Q_down2/(pi*D_down2**2*L_down2/4))
+#print(Q_per_volume)
+#print(4*q_h/D_mod)
 
+
+##############################################
+# left section leaving moderator
+##############################################
 
 L_left=L_right # m, length to moderator vessel
 D_left=0.03175 # m
@@ -304,8 +362,14 @@ P_left=[pi*D_left]*n_left
 #Grleft = (g*beta_t*rho**2*D_left**3*(q_h*(L_hex+L_down)/(Aleft*mu*cp)))/(mu**2)
 x_left=[L_right-x*L_left/(n_left*1.) for x in range(0,n_left)]
 
+##############################################
+# left wall
+##############################################
+thick_left_wall=thick_right_wall
 
-
+##############################################
+# riser
+##############################################
 L_rise=L_hex+L_down #top_z_hex-bottom_z-L_mod # m, height of rise
 D_rise=0.03175 # m, diameter
 n_rise=n_per
@@ -319,6 +383,14 @@ P_rise=[pi*D_rise]*n_rise
 #Grrise = (g*beta_t*rho**2*D_rise**3*(q_h*(L_hex+L_down)/(Arise*mu*cp)))/(mu**2)
 x_rise=[L_right-L_left]*n_rise
 
+##############################################
+# riser wall
+##############################################
+thick_rise_wall=thick_left_wall
+
+##############################################
+# Concatenate arrays to make more easily iterable
+##############################################
 T_array=np.array(T_hex+T_down+T_right+T_down2+T_mod+T_left+T_rise)
 n_array=len(T_array)
 A_array=np.array(A_hex+A_down+A_right+A_down2+A_mod+A_left+A_rise)
@@ -327,7 +399,6 @@ s_array=np.array(s_hex+s_down+s_right+s_down2+s_mod+s_left+s_rise)
 z_array=np.array(z_hex+z_down+z_right+z_down2+z_mod+z_left+z_rise)
 ds_array=np.array(ds_hex+ds_down+ds_right+ds_down2+ds_mod+ds_left+ds_rise)
 x_array=np.array(x_hex+x_down+x_right+x_down2+x_mod+x_left+x_rise)
-#print(n_array,T_array,source_array,x_array,s_array,z_array)
 
 source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod_down2+source_mod+[0.]*n_left+[0.]*n_rise
 
