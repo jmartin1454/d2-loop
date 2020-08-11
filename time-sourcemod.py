@@ -230,6 +230,7 @@ D_down=0.0134 # m, diameter of downcomer
 n_down=n_per
 T_down=[T_initial]*n_down
 s_down=[L_hex+x*L_down/(n_down*1.) for x in range(0,n_down)]
+#source_down=[4*q_h/(D_mod*rho_0*cp) - 4*hc*(T_al[x]-T_cold)/((D_o-D_i)*rho_ss*cp_ss) ]*n_down # W/(J/K)=K/s
 Adown=pi*D_down**2/4
 A_down=[pi*D_down**2/4]*n_down
 ds_down=[L_down/(n_down*1.)]*n_down
@@ -290,12 +291,19 @@ x_down2=[L_right]*n_down2
 # orphaned declarations
 Pr=(mu*cp)/(kt)
 B1=1.174*((3.7e-5)/(3.68e-5))**(0.14)
+<<<<<<< HEAD
+D_o=
+D_i=
+rho_al=0.00027
+cp_al=
+=======
 
 ##############################################
 # 2nd downcomer wall parameters
 ##############################################
 # guess schedule 10, with wall thickness of 0.065 inches
 thick_down2_wall=0.065*0.0254 # m, guess Al
+
 
 ##############################################
 # moderator volume
@@ -306,7 +314,7 @@ n_mod=n_per
 T_mod=[T_initial]*n_mod
 s_mod=[L_hex+L_down+L_right+L_down2+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
 q_h=q_mod_total/(L_mod*pi*D_mod) # W/m^2
-source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod # W/(J/K)=K/s
+source_mod=[4*q_h/(D_mod*rho_0*cp) - 4*hc*(T_al[x]-T_cold)/((D_o-D_i)*rho_al*cp_al) ]*n_mod # W/(J/K)=K/s
 A_mod=[pi*D_mod**2/4]*n_mod
 Amod=pi*D_mod**2/4
 ds_mod=[L_mod/(n_mod*1.)]*n_mod
@@ -354,6 +362,7 @@ D_left=0.03175 # m
 n_left=n_per
 T_left=[T_initial]*n_left
 s_left=[L_hex+L_down+L_right+L_down2+L_mod+x*L_left/(n_left*1.) for x in range(0,n_left)]
+#source_left=[4*q_h/(D_mod*rho_0*cp) - 4*hc*(T_al[x]-T_cold)/((D_o-D_i)*rho_ss*cp_ss) ]*n_left # W/(J/K)=K/s
 A_left=[pi*D_left**2/4]*n_left
 Aleft=pi*D_left**2/4
 ds_left=[L_left/(n_left*1.)]*n_left
@@ -375,6 +384,7 @@ D_rise=0.03175 # m, diameter
 n_rise=n_per
 T_rise=[T_initial]*n_rise
 s_rise=[L_hex+L_down+L_right+L_down2+L_mod+L_left+x*L_rise/(n_rise*1.) for x in range(0,n_rise)]
+#source_rise=[4*q_h/(D_mod*rho_0*cp) - 4*hc*(T_al[x]-T_cold)/((D_o-D_i)*rho_ss*cp_ss) ]*n_rise # W/(J/K)=K/s
 A_rise=[pi*D_rise**2/4]*n_rise
 Arise=pi*D_rise**2/4
 ds_rise=[L_rise/(n_rise*1.)]*n_rise
@@ -402,13 +412,15 @@ x_array=np.array(x_hex+x_down+x_right+x_down2+x_mod+x_left+x_rise)
 
 source_array=source_hex+[0.]*n_down+[0.]*n_right+source_mod_down2+source_mod+[0.]*n_left+[0.]*n_rise
 
+source_arrayss=[0.]*n_hex+source_down+[0.]*n_right+[0.]*n_down2+[0.]*n_mod+source_left+source_rise
+
 #Lt=L_hex+L_down+L_right+L_mod+L_left+L_rise
 #Dr=(1/Lt)*(Dh*L_hex + D_down*L_down + D_right*L_right + D_mod*L_mod + D_left*L_left + D_rise*L_rise)
 #Ng=(Lt/Dr)*()
 
 
-Tot_vol = (A*L_hex) + (pi*D_down**2*L_down/4) + (pi*D_right**2*L_right/4) + (pi*D_down2**2*L_down2/4) + (pi*D_mod**2*L_mod/4) + (pi*D_left**2*L_left/4) + (pi*D_rise**2*L_rise/4)
-print('total vol is %f m3' %Tot_vol )
+#Tot_vol = (A*L_hex) + (pi*D_down**2*L_down/4) + (pi*D_right**2*L_right/4) + (pi*D_down2**2*L_down2/4) + (pi*D_mod**2*L_mod/4) + (pi*D_left**2*L_left/4) + (pi*D_rise**2*L_rise/4)
+#print('total vol is %f m3' %Tot_vol )
 
 
 # graphs of geometry
@@ -496,15 +508,16 @@ dt=.1 # s
 beam_cycle=240 # s
 beam_on=60 # s
 alpha=kt/(rho_0*cp) #J/smk kgm2/ss2mK    kgm/s3K * 1/kg/m3 * 1/J/kgK
+alphass=ktss/(rho_ss*cpss)
 # alpha=0 # used to test possible oddities due to longitudinal conduction
 for tstep in range(0,n_tsteps):
     t=dt*tstep
 
     # set beam current
     if(t%beam_cycle<beam_on):
-        set_beam_current(40.)
+        set_beam_current(10.)
     else:
-        set_beam_current(0.)
+        set_beam_current(10.)
 #    if(t>5000):
 #        set_beam_current(10.)
 #    else:
@@ -517,6 +530,7 @@ for tstep in range(0,n_tsteps):
         else:
             ds=s_array[nstep]-s_array[nstep-1]
         dTemp=dt*(-(w/(A_array[nstep]*rho_0))*(T_array[nstep]-T_array[nstep-1])/ds+source_array[nstep] + alpha*(((T_array[nstep]-T_array[nstep-1])/ds_array[nstep])-((T_array[nstep-1]-T_array[nstep-2])/ds_array[nstep-1]))/((ds_array[nstep]+ds_array[nstep-1])/2))
+        dTempss=dt*(source_arrayss[nstep] + alphass*(((T_array[nstep]-T_array[nstep-1])/ds_array[nstep])-((T_array[nstep-1]-T_array[nstep-2])/ds_array[nstep-1]))/((ds_array[nstep]+ds_array[nstep-1])/2))
         T_array[nstep]=T_array[nstep]+dTemp
     rho_integral=0
     for nstep in range(0,n_array):
@@ -534,16 +548,16 @@ for tstep in range(0,n_tsteps):
         Rerise=abs(D_rise*w/(Arise*mu))
         Releft=abs(D_left*w/(Aleft*mu))
         Revalue.append(Re)
-        if Redown2 < 0.00001:
-            jh=0
-        else :
-            jh=0.023*Redown2**(-0.2)*B1
-        Nuturb=jh*Redown2*Pr**(1./3.)
-        hc_down2 = Nuturb*kt/D_down2
-        if hc_down2 == 0 :
-            Qw=0
-        else:
-            Qw =( T_array[47] - T_array[32]) / (1/(hc_mod*D_down2*L_down2) + 1/(hc_down2*D_down2*L_down2) + 1/(kt*L_down2))
+#        if Redown2 < 0.00001:
+#            jh=0
+#        else :
+#            jh=0.023*Redown2**(-0.2)*B1
+#        Nuturb=jh*Redown2*Pr**(1./3.)
+#        hc_down2 = Nuturb*kt/D_down2
+#        if hc_down2 == 0 :
+#            Qw=0
+#        else:
+#            Qw =( T_array[47] - T_array[32]) / (1/(hc_mod*D_down2*L_down2) + 1/(hc_down2*D_down2*L_down2) + 1/(kt*L_down2))
         if w < 0.0000003:
             f = 0.03
         else :

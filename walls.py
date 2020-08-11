@@ -295,9 +295,6 @@ P_down2=[pi*D_down2]*n_down2
 #Grdown2 = (g*beta_t*rho**2*D_down2**3*(q_h*(L_hex+L_down)/(Adown2*mu*cp)))/(mu**2)
 x_down2=[L_right]*n_down2
 
-# orphaned declarations
-Pr=(mu*cp)/(kt)
-B1=1.174*((3.7e-5)/(3.68e-5))**(0.14)
 
 ##############################################
 # 2nd downcomer wall parameters
@@ -438,6 +435,14 @@ rhocp_wall=np.array(rhocp_hex_wall+rhocp_down_wall+rhocp_right_wall+rhocp_down2_
 ID_wall=np.array(ID_hex_wall+ID_down_wall+ID_right_wall+ID_down2_wall+ID_mod_wall+ID_left_wall+ID_rise_wall)
 thick_wall=np.array(thick_hex_wall+thick_down_wall+thick_right_wall+thick_down2_wall+thick_mod_wall+thick_left_wall+thick_rise_wall)
 
+A_array_steel=np.array(A_hex+A_down+A_left+A_rise)
+P_array_steel=np.array(P_hex+P_down+P_left+P_rise)
+D_h_steel=4*A_array_steel/P_array_steel
+
+A_array_al=np.array(A_right+A_down2+A_mod)
+P_array_al=np.array(P_right+P_down2+P_mod)
+D_h_al=4*A_array_al/P_array_al
+
 #Lt=L_hex+L_down+L_right+L_mod+L_left+L_rise
 #Dr=(1/Lt)*(Dh*L_hex + D_down*L_down + D_right*L_right + D_mod*L_mod + D_left*L_left + D_rise*L_rise)
 #Ng=(Lt/Dr)*()
@@ -520,8 +525,39 @@ def set_beam_current(curr):
         source_array[n_hex+n_down+n_right+n_down2+i]=source_mod[i]
     return
 
-def hcfunc(w,T,D,A,P):
-    return 300.
+Pr_steel=(mu*cp_steel)/(kt_steel)
+Pr_al=(mu*cp_al)/kt_al
+
+#def Nufcn_steel():
+#    Nu_steel=0.23*Pr_steel**(1/3)*(Re_array_steel)**(0.7)
+#    return Nu_steel
+##
+#def Nufcn_al(Re_array_al):
+#    Nufnc_al=0.23*Pr_al**(1/3)*Re_array_al**(0.7)
+#    return Nufnc_al
+#
+
+
+def hcfunc_steel(Nufcn_steel):
+    hcfunc_steel=Nufcn_steel*kt_steel/D_h_steel
+    return hcfunc_steel
+#
+#def hcfunc_al(Nufnc_al):
+#    hcfunc_al=Nufcn_al*kt_al/D_h_al
+#    return hcfunc_al
+
+#
+#
+#
+#def pipes_steel(hcfunc_steel,T_array,T_wall,rhocp_wall):
+#    p=np.vectorize(4*hcfunc_steel*(T_array[i]-T_wall[i])/(rhocp_wall))
+#    return p
+#
+#
+#def pipes_al(hcfunc_al,T_array,T_wall,rhocp_wall):
+#    p=4*hcfunc_steel*(T_array[i]-T_wall[i])/(rhocp_wall)
+#    return p
+
 
 
 fRe=24.00*4
@@ -534,19 +570,27 @@ beam_cycle=240 # s
 beam_on=60 # s
 alpha=kt/(rho_0*cp) #J/smk kgm2/ss2mK    kgm/s3K * 1/kg/m3 * 1/J/kgK
 # alpha=0 # used to test possible oddities due to longitudinal conduction
+alpha_steel=kt_steel/(rho_steel*cp_steel)
+alpha_al=kt_al/(rho_al*cp_al)
 for tstep in range(0,n_tsteps):
     t=dt*tstep
-
     # set beam current
     if(t%beam_cycle<beam_on):
         set_beam_current(40.)
     else:
         set_beam_current(0.)
+    if w < 2300:
+        hcfunc_steel(4.6808)
+    else:
+        hcfunc_steel(0.23*Pr_steel**(1/3)*(np.array(abs(D_hex*w/(A*mu))+abs(D_down*w/(Adown*mu))+abs(D_left*w/(Aleft*mu))+abs(D_rise*w/(Arise*mu))))**(0.7))
+#    if w < 2300:
+#           hcfunc_al(4.6808)
+#    else:
+#           hcfunc_al(0.23*Pr_al**(1/3)*(np.array(abs(D_right*w/(Aright*mu))+ abs(D_down2*w/(Adown2*mu))+abs(D_mod*w/(Amod*mu))))**(0.7))
 #    if(t>5000):
 #        set_beam_current(10.)
 #    else:
 #        set_beam_current(0.)
-
 
     for i in range(0,n_array):
         # calculate hc
@@ -560,12 +604,11 @@ for tstep in range(0,n_tsteps):
         dTemp=dt*(
             -(w/(A_array[i]*rho_0))*(T_array[i]-T_array[i-1])/ds
             +source_array[i]
-            +alpha*(((T_array[i]-T_array[i-1])/ds_array[i])-((T_array[i-1]-T_array[i-2])/ds_array[i-1]))/((ds_array[i]+ds_array[i-1])/2)
-        )
+            +alpha*(((T_array[i]-T_array[i-1])/ds_array[i])-((T_array[i-1]-T_array[i-2])/ds_array[i-1]))/((ds_array[i]+ds_array[i-1])/2))
         T_array[i]=T_array[i]+dTemp
         # update wall temperatures
-        dTemp=dt*(alpha*(((T_wall[i]-T_wall[i-1])/ds_array[i])-((T_wall[i-1]-T_wall[i-2])/ds_array[i-1]))/((ds_array[i]+ds_array[i-1])/2))
-        T_wall[i]=T_wall[i]+dTemp
+        dTemp2=dt*( (alpha_al+alpha_steel)*(((T_wall[i]-T_wall[i-1])/ds_array[i])-((T_wall[i-1]-T_wall[i-2])/ds_array[i-1]))/((ds_array[i]+ds_array[i-1])/2))
+#        T_wall[i]=T_wall[i]+dTemp2
     rho_integral=0
     for nstep in range(0,n_array):
         rho_integral=rho_integral-rho_0*beta_t*g*T_array[nstep]*(z_array[nstep]-z_array[nstep-1])
@@ -582,16 +625,8 @@ for tstep in range(0,n_tsteps):
         Rerise=abs(D_rise*w/(Arise*mu))
         Releft=abs(D_left*w/(Aleft*mu))
         Revalue.append(Re)
-        if Redown2 < 0.00001:
-            jh=0
-        else :
-            jh=0.023*Redown2**(-0.2)*B1
-        Nuturb=jh*Redown2*Pr**(1./3.)
-        hc_down2 = Nuturb*kt/D_down2
-        if hc_down2 == 0 :
-            Qw=0
-        else:
-            Qw =( T_array[47] - T_array[32]) / (1/(hc_mod*D_down2*L_down2) + 1/(hc_down2*D_down2*L_down2) + 1/(kt*L_down2))
+        Re_array_steel=np.array(Rehex+Redown+Releft+Rerise)
+        Re_array_al=np.array(Reright+Redown2+Remod)
         if w < 0.0000003:
             f = 0.03
         else :
@@ -621,6 +656,7 @@ for tstep in range(0,n_tsteps):
     if(tstep%sparse==0):
         print('This is time %f and w is %f'%(t,w))
         print(min(T_array),max(T_array))
+        print(hcfunc_steel)
 #        print(Revalue)
 #        print(f)
         #print(T_array)
