@@ -173,6 +173,8 @@ Aw = perimeter*L #(2*n*w+2*n*d)*L (Aw_wet) 3952 compared to 3956
 #print()
 #print()
 
+print('For 16 PSIA:')
+
 p_psi16=16. # PSI
 p16=p_psi16*6894.76 # Pa
 
@@ -218,7 +220,7 @@ Nu16=0.9428*(Ra16/Ja16)**(1/4)
 
 Re16 = (4*Nu16*Ja16)/Pr
 
-print(Re16)
+print('Reynolds number at 16 PSIA with approx Nu is %f' %Re16)
 
 #gratez
 
@@ -228,7 +230,7 @@ Nu216 = ((Pr) / (4*Ja16))*(((Gr16**(1/3)*Ja16) / (0.27*Pr)) + 4.815)**(1/1.22)
 
 Re216 = (4*Nu216*Ja16)/Pr
 
-print('Re2 is %f' %Re216)
+print('Reynolds number with avg Nu is %f' %Re216)
 
 hc16 = Nu216*kt/L
 
@@ -257,7 +259,7 @@ Vts=0.102318 #m
 
 Vtank = (Vts*(rho_cold-rho_293))*(1/(rho_293-rho_cold293))
 
-print(Vtank)
+print('Vol tank is %f m3.' %Vtank)
 
 Tcold=20 #K
 Thot=293 #K
@@ -276,13 +278,23 @@ plt.text(22.5, 1.25e6, 'liquid', rotation = 45)
 plt.text(35, 5e4, 'gas', rotation = 45)
 plt.show()
 
+
+
+
+Psat = ((Vts+Vtank)*rho_cold293)*(1/((Vtank+Vts)*2/(1000*8.314*293)))
+
+
+print('Psat is %f psia' %(Psat/6894.76))
+print('Psat is %f Pa' %(Psat))
+
+
 #From there pick Psat off of graph and plug in for p
 
-p= 0.6e6 # Pa
+p= 222033.753684 # Pa
 
 Tsat=CP.PropsSI('T','P',p,'Q',1,fluid) #from cool prop
 print()
-print('the temp at saturated pressure is %f K' %Tsat)
+print('The temp at the saturated pressure is %f K' %Tsat)
 
 HV=CP.PropsSI('H','P',p,'Q',1,fluid)
 
@@ -323,7 +335,7 @@ Nu=0.9428*(Ra/Ja)**(1/4)
 
 Re = (4*Nu*Ja)/Pr
 
-print('The Reynolds number is %f' %Re)
+print('The Reynolds number with approx Nu is %f' %Re)
 
 #gratez
 
@@ -333,7 +345,7 @@ Nu2 = ((Pr) / (4*Ja))*(((Gr**(1/3)*Ja) / (0.27*Pr)) + 4.815)**(1/1.22)
 
 Re2 = (4*Nu2*Ja)/Pr
 
-print('Re2 is %f' %Re2)
+print('Reynolds number with avg Nu is %f' %Re2)
 
 hc = Nu2*kt/L
 
