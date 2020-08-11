@@ -547,7 +547,7 @@ for tstep in range(0,n_tsteps):
 #    else:
 #        set_beam_current(0.)
 
-        
+
     for i in range(0,n_array):
         # calculate hc
         # hc=...
