@@ -93,7 +93,7 @@ agroove_total=agroove+aeps
 agrooves=agroove_total*ngrooves
 area=annulus+agrooves
 
-plt.show()
+#plt.show()
 
 a=area # (m^2) area for fluid flow
 p=perimeter+pi*d2 # (m) perimeter of flow region
@@ -247,17 +247,24 @@ print()
 
 rho_cold=PropsSI('D','T',20,'P',(16*6894.76),fluid)
 
+rho_cold=PropsSI('D','P',(16*6894.76),'Q',0,fluid)
+T_test=PropsSI('T','P',(16*6894.76),'Q',0,fluid)
+
 rho_cold293=PropsSI('D','T',293,'P',(16*6894.76),fluid)
 
-#print(rho_cold)
+print(rho_cold)
+print(T_test)
 
 rho_293=PropsSI('D','T',293,'P',(150*6894.76),fluid)
 
-#print(rho_293)
+print(rho_293)
 
 Vts=0.102318 #m
 
 Vtank = (Vts*(rho_cold-rho_293))*(1/(rho_293-rho_cold293))
+
+
+
 
 print('Vol tank is %f m3.' %Vtank)
 
@@ -276,7 +283,7 @@ plt.ylabel('Pressure (Pa)')
 plt.xlabel('Temp (K)')
 plt.text(22.5, 1.25e6, 'liquid', rotation = 45)
 plt.text(35, 5e4, 'gas', rotation = 45)
-plt.show()
+#plt.show()
 
 
 
@@ -377,3 +384,44 @@ print()
 
 
 
+# A stupid calculation
+
+# loop over the possible saturated pressures
+
+Plow=16*6894.76 # Pa
+Phigh=150*6894.76 # Pa
+
+total_mass=rho_293*(Vtank+Vts) # kg, total mass of deuterium
+
+
+# example abstracting away temperature until after loop
+
+for P in np.linspace(Plow,Phigh,1000):
+    rho_sat_V=PropsSI('D','P',P,'Q',1,fluid)
+    Ptank=PropsSI('P','T',293,'D',(total_mass-rho_sat_V*Vts)/Vtank,fluid)
+    #print(P,rho_sat_V,Ptank)
+    if(P>Ptank):
+        break
+print(Ptank,Ptank/6894.76)
+Tcold=PropsSI('T','P',Ptank,'Q',1,fluid)
+print(Tcold)
+rho_sat_V=PropsSI('D','P',P,'Q',1,fluid)
+Tcoldprime=PropsSI('T','P',Ptank,'D',rho_sat_V,fluid)
+print(Tcoldprime)
+
+
+# example with loop over temperature instead of pressure
+
+for T in np.linspace(19,40,1000):
+    P=PropsSI('P','T',T,'Q',1,fluid)
+    rho_sat_V=PropsSI('D','T',T,'Q',1,fluid)
+    Ptank=PropsSI('P','T',293,'D',(total_mass-rho_sat_V*Vts)/Vtank,fluid)
+    #print(P,rho_sat_V,Ptank)
+    if(P>Ptank):
+        break
+print(Ptank,Ptank/6894.76)
+Tcold=PropsSI('T','P',Ptank,'Q',1,fluid)
+print(Tcold)
+rho_sat_V=PropsSI('D','P',P,'Q',1,fluid)
+Tcoldprime=PropsSI('T','P',Ptank,'D',rho_sat_V,fluid)
+print(Tcoldprime)
