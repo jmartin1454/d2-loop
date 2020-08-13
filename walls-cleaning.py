@@ -497,13 +497,53 @@ def set_beam_current(curr):
 fRe=24.00*4
 Nu=4.8608 #or some constant, laminar case
 #hc=Nu*kt/D #will also be constant
-n_tsteps=20000
+n_tsteps=50000
 dt=.1 # s
 # consider adaptive time steps see Vijayan eq. (4.99)
 beam_cycle=240 # s
 beam_on=60 # s
 alpha=kt/(rho_0*cp) #J/smk kgm2/ss2mK    kgm/s3K * 1/kg/m3 * 1/J/kgK
 # alpha=0 # used to test possible oddities due to longitudinal conduction
+
+def dbyds_plus(i,T,s):
+    if(i==len(T)-1):
+        ds_ave=((s[1]-s[0])+(s[len(T)-1]-s[len(T)-2]))/2
+        derivative=(T[0]-T[len(T)-1])/ds_ave
+    else:
+        derivative=(T[i+1]-T[i])/(s[i+1]-s[i])
+    return derivative
+
+def dbyds_minus(i,T,s):
+    if(i==0):
+        ds_ave=((s[1]-s[0])+(s[len(T)-1]-s[len(T)-2]))/2
+        derivative=(T[0]-T[len(T)-1])/ds_ave
+    else:
+        derivative=(T[i]-T[i-1])/(s[i]-s[i-1])
+    return derivative
+
+
+def d2byds2(i,T,s):
+    if(i==0):
+        ds_ave=((s[1]-s[0])+(s[len(T)-1]-s[len(T)-2]))/2
+    elif(i==len(T)-1):
+        ds_ave=((s[1]-s[0])+(s[len(T)-1]-s[len(T)-2]))/2
+    else:
+        ds_ave=(s_array[i+1]-s_array[i-1])/2
+    second_derivative=(dbyds_plus(i,T,s)-dbyds_minus(i,T,s))/ds_ave
+    return second_derivative
+
+def dbyds_avg(i,T,s):
+    return (dbyds_plus(i,T,s)+dbyds_minus(i,T,s))/2
+
+def dbyds_directional(w,i,T,s):
+    if(w>0):
+        derivative=dbyds_minus(i,T,s)
+    elif(w<0):
+        derivative=dbyds_plus(i,T,s)
+    else:
+        derivative=0
+    return derivative
+
 
 for tstep in range(0,n_tsteps):
     t=dt*tstep
@@ -515,22 +555,21 @@ for tstep in range(0,n_tsteps):
             set_beam_current(10.)
     else:
         set_beam_current(0.)
-            
+
     for i in range(0,n_array):
-        if(i==0):
-            ds=ds_array[0]
-        else:
-            ds=s_array[i]-s_array[i-1]
+        # update fluid temperatures
         dTemp=dt*(
-            -(w/(A_array[i]*rho_0))*(T_array[i]-T_array[i-1])/ds
+            -(w/(A_array[i]*rho_0))*dbyds_directional(w,i,T_array,s_array)
             +source_array[i]+source_wall_to_fluid[i]
-            +alpha*(((T_array[i]-T_array[i-1])/ds_array[i])-((T_array[i-1]-T_array[i-2])/ds_array[i-1]))/((ds_array[i]+ds_array[i-1])/2))
+            +alpha*d2byds2(i,T_array,s_array)
+        )
+        #print(T_array[i],s_array[i],dbyds_avg(i,T_array,s_array),dbyds_minus(i,T_array,s_array),dbyds_plus(i,T_array,s_array))
         T_array[i]=T_array[i]+dTemp
         # update wall temperatures
-        alpha_wall[i]=0
         dTemp_wall=dt*(
             source_fluid_to_wall[i]
-            +alpha_wall[i]*(((T_wall[i]-T_wall[i-1])/ds_array[i])-((T_wall[i-1]-T_wall[i-2])/ds_array[i-1]))/((ds_array[i]+ds_array[i-1])/2))
+            +alpha_wall[i]*d2byds2(i,T_wall,s_array)
+        )
         T_wall[i]=T_wall[i]+dTemp_wall
     rho_integral=0
     for i in range(0,n_array):
@@ -598,7 +637,6 @@ for tstep in range(0,n_tsteps):
         else:
             source_fluid_to_wall[i]=4*hcw*(T_array[i]-T_wall[i])/(D_h*rhocp_wall[i])
 
-            
         foa2_sum=foa2_sum+f*ds_array[i]/(D_h*A_array[i]**2)
         Gamma=Gamma+ds_array[i]/A_array[i]
     foa2K_sum=foa2_sum+KoA2cont1+KoA2cont2+2*KoA245+KoA2exp1+KoA2cont1+KoA290+KoA2valve+KoA2exp2
