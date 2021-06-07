@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 from math import *
 import matplotlib.pyplot as plt
@@ -34,13 +34,18 @@ rho_0=168. # kg/m^3
 T_0=21.
 def rho(T):
 
-    return 220.82-(T/2.4506) # kg/m^3
+#    return 220.82-(T/2.4506) # kg/m^3
 
 #rel bt density and temp found by taking the plot of T as a fun of den from coolprop values
 
 #T = -2.4506rho + 220.82
 
-#    return rho_0*(1.-beta_t*(T-T_0)) # kg/m^3
+    return rho_0*(1.-beta_t*(T-T_0)) # kg/m^3
+
+# Note: using any version of rho(T) other than the line above is
+# inconsistent with equations below which also rely on beta_t.  If you
+# want to use any other version, you must update beta_t and rho_0
+# rather than hard-coding your own Boussinesq formula.
 
 #k values
 
@@ -139,7 +144,7 @@ cp=6565. # J/(kg-K), specific heat capacity of LD2
 T_cold=19.8 # K
 T_initial=T_cold+0.1
 
-n_per=10
+n_per=100
 
 ##############################################
 # hex geometry of inital laminar
@@ -441,14 +446,6 @@ rhocp_wall=np.array(rhocp_hex_wall+rhocp_down_wall+rhocp_right_wall+rhocp_down2_
 ID_wall=np.array(ID_hex_wall+ID_down_wall+ID_right_wall+ID_down2_wall+ID_mod_wall+ID_left_wall+ID_rise_wall)
 thick_wall=np.array(thick_hex_wall+thick_down_wall+thick_right_wall+thick_down2_wall+thick_mod_wall+thick_left_wall+thick_rise_wall)
 
-A_array_steel=np.array(A_hex+A_down+A_left+A_rise)
-P_array_steel=np.array(P_hex+P_down+P_left+P_rise)
-D_h_steel=4*A_array_steel/P_array_steel
-
-A_array_al=np.array(A_right+A_down2+A_mod)
-P_array_al=np.array(P_right+P_down2+P_mod)
-D_h_al=4*A_array_al/P_array_al
-
 #Lt=L_hex+L_down+L_right+L_mod+L_left+L_rise
 #Dr=(1/Lt)*(Dh*L_hex + D_down*L_down + D_right*L_right + D_mod*L_mod + D_left*L_left + D_rise*L_rise)
 #Ng=(Lt/Dr)*()
@@ -497,13 +494,13 @@ def set_beam_current(curr):
 fRe=24.00*4
 Nu=4.8608 #or some constant, laminar case
 #hc=Nu*kt/D #will also be constant
-n_tsteps=50000
-dt=.1 # s
+n_tsteps=100000
+dt=.01 # s
 # consider adaptive time steps see Vijayan eq. (4.99)
 beam_cycle=240 # s
 beam_on=60 # s
 alpha=kt/(rho_0*cp) #J/smk kgm2/ss2mK    kgm/s3K * 1/kg/m3 * 1/J/kgK
-# alpha=0 # used to test possible oddities due to longitudinal conduction
+alpha=0 # used to test possible oddities due to longitudinal conduction
 
 def dbyds_plus(i,T,s):
     if(i==len(T)-1):
@@ -544,6 +541,14 @@ def dbyds_directional(w,i,T,s):
         derivative=0
     return derivative
 
+def Gimme_Gamma():
+    # Gamma is a purely geometrical factor Vijayan Eq. (4.25)
+    Gamma=0.
+    for i in range(0,n_array):
+        Gamma=Gamma+ds_array[i]/A_array[i]
+    return Gamma
+
+Gamma=Gimme_Gamma()
 
 for tstep in range(0,n_tsteps):
     t=dt*tstep
@@ -575,27 +580,14 @@ for tstep in range(0,n_tsteps):
     for i in range(0,n_array):
         rho_integral=rho_integral-rho_0*beta_t*g*T_array[i]*(z_array[i]-z_array[i-1])
     foa2_sum=0.
-    Gamma=0.
     for i in range(0,n_array):
         D_h=4*A_array[i]/P_array[i]
         Re=abs(4*w/(P_array[i]*mu))
         # determine Darcy friction factor
-        if(Re<2300):
-            #fRe=64.00 # circular duct Barron Eq. (6.27)
-            #fRe=96.00 # Table 6.2 Barron
-            #fRe=24.00*4 # Table Table 86 of Shah and London, thin annulus
-            if(w<0.0000003): # watch out for very low Reynolds numbers
-                f=0.03
-            else:
-                if(i<n_hex):
-                    f=abs(fRe/Re)
-                else:
-                    f=64/Re # assume cicular tube correlation if not in HEX
-        elif(3500>Re>2300):
-            f=1.2036*Re**(-0.416) #from vijayan
-        else:
-            f=0.316*Re**(-0.25)
-
+        # laminar cases:
+        #fRe=64.00 # circular duct Barron Eq. (6.27)
+        #fRe=96.00 # Table 6.2 Barron
+        #fRe=24.00*4 # Table Table 86 of Shah and London, thin annulus
         # Vijayan Eq. (3.65) version
         if(w<0.0000003): # watch out for very low Reynolds numbers
             f=0.01
@@ -614,7 +606,7 @@ for tstep in range(0,n_tsteps):
         #Nu=4.8608 # Eq. (283) Shah and London, parallel plate one side insulated
         if(Re<3500):
             if(i<n_hex):
-                Nu=4.8608
+                Nu=4.8608/2
             else:
                 Nu=3.657 # use circular tube correlation outside HEX
         else:
@@ -624,7 +616,8 @@ for tstep in range(0,n_tsteps):
             Nu=jh*Re*Pr**(1./3.)
         hcw=Nu*kt/D_h # Barron eq'n 6.15
 
-        hcw=10
+        #hcw=10 # for some kind of testing?
+        hcw=0
         
         # Do the heat xfer in this section
         if(i<n_hex):
@@ -638,7 +631,7 @@ for tstep in range(0,n_tsteps):
             source_fluid_to_wall[i]=4*hcw*(T_array[i]-T_wall[i])/(D_h*rhocp_wall[i])
 
         foa2_sum=foa2_sum+f*ds_array[i]/(D_h*A_array[i]**2)
-        Gamma=Gamma+ds_array[i]/A_array[i]
+
     foa2K_sum=foa2_sum+KoA2cont1+KoA2cont2+2*KoA245+KoA2exp1+KoA2cont1+KoA290+KoA2valve+KoA2exp2
     friction_term=foa2K_sum*w**2/(2*rho_0)
     # dw step
@@ -647,7 +640,7 @@ for tstep in range(0,n_tsteps):
     sparse=1000 # sparseness of standard output
     if(tstep%sparse==0):
         print('This is time %f and w is %f'%(t,w))
-        print(min(T_array),max(T_array))
+        print(min(T_array),max(T_array),foa2_sum)
         Tminvalue.append(min(T_array))
         Tmaxvalue.append(max(T_array))
         wvalue.append(w)
@@ -657,6 +650,16 @@ for tstep in range(0,n_tsteps):
 
 savetxt('w.txt', wvalue, delimiter=',')
 
+print('foa2_sum = %f m^-2'%foa2_sum)
+print('Ts = %f K'%T_cold)
+print('P = %f m^-1'%(4*hc*A/(D*w*cp)))
+print('top of hex height = %f m'%top_z_hex)
+print('bot of hex height = %f m'%(top_z_hex-L_hex))
+print('top of mod = %f m'%(very_bottom_z+L_mod))
+print('very bottom of mod = %f m'%very_bottom_z)
+h=(top_z_hex+top_z_hex-L_hex)/2-(very_bottom_z+L_mod+very_bottom_z)/2
+print('height approx = %f m'%h)
+print('w est. = %f kg/s'%(2*rho_0**2*beta_t*g*q_mod_total*h/(foa2_sum*cp))**(1./3.))
 
 plt.plot(tvalue,wvalue,'r:')
 plt.ylabel('w (kg/s)')
