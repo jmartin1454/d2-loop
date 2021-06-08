@@ -9,6 +9,17 @@ from scipy.misc import derivative
 from numpy import asarray
 from numpy import savetxt
 
+from optparse import OptionParser
+
+parser = OptionParser()
+
+parser.add_option("-c", "--camhex", dest="camhex",
+                  default=False, action="store_true",
+                  help="Use original Cam HEX design")
+
+(options, args) = parser.parse_args()
+
+
 kt=0.104
 Nu=4.8608
 mu=3.5e-5
@@ -150,85 +161,135 @@ n_per=100
 # hex geometry of inital laminar
 ##############################################
 
-L_hex=10*0.0254 # m, length of hex (could be helix)
-d2=4.76*0.0254 # (m) inner diameter of the outer tubular housing
-d1=4.75*0.0254 # (m) diameter of the inner cold cylinder before
-groove_depth=0.1*0.0254 # m
-groove_width=0.06*0.0254 # m
-n=ngrooves=124
-fig,ax=plt.subplots()
-ax.set_xlim([-d2/2,d2/2])
-ax.set_ylim([-d2/2,d2/2])
-circle1=plt.Circle((0,0),d2/2,color='r',fill=False)
-ax.add_artist(circle1)
-r=d1/2
-wd=groove_width
-d=groove_depth
-theta=360./ngrooves
-for groove in range(ngrooves):
-    center_angle=groove*theta
+if options.camhex:
 
-    alpha=center_angle*pi/180
-    x=r*cos(alpha)
-    y=r*sin(alpha)
+    L_hex=Lprime=10*0.0254 # m, length of hex (could be helix)
+    d2=4.76*0.0254 # (m) inner diameter of the outer tubular housing
+    d1=4.75*0.0254 # (m) diameter of the inner cold cylinder before
+    groove_depth=0.1*0.0254 # m
+    groove_width=0.06*0.0254 # m
+    n=ngrooves=124
+    fig,ax=plt.subplots()
+    ax.set_xlim([-d2/2,d2/2])
+    ax.set_ylim([-d2/2,d2/2])
+    circle1=plt.Circle((0,0),d2/2,color='r',fill=False)
+    ax.add_artist(circle1)
+    r=d1/2
+    wd=groove_width
+    d=groove_depth
+    theta=360./ngrooves
+    for groove in range(ngrooves):
+        center_angle=groove*theta
 
-    dalpha=asin(wd/2/r)
+        alpha=center_angle*pi/180
+        x=r*cos(alpha)
+        y=r*sin(alpha)
 
-    xsl=r*cos(alpha+dalpha)
-    ysl=r*sin(alpha+dalpha)
-    xel=xsl-d*cos(alpha)
-    yel=ysl-d*sin(alpha)
+        dalpha=asin(wd/2/r)
 
-    xsr=r*cos(alpha-dalpha)
-    ysr=r*sin(alpha-dalpha)
-    xer=xsr-d*cos(alpha)
-    yer=ysr-d*sin(alpha)
+        xsl=r*cos(alpha+dalpha)
+        ysl=r*sin(alpha+dalpha)
+        xel=xsl-d*cos(alpha)
+        yel=ysl-d*sin(alpha)
 
-    # draw line at edge of each groove
-    line=plt.plot([xsl,xel],[ysl,yel],color='black')
-    line=plt.plot([xsr,xer],[ysr,yer],color='black')
-    # and bottom of groove
-    line=plt.plot([xel,xer],[yel,yer],color='black')
+        xsr=r*cos(alpha-dalpha)
+        ysr=r*sin(alpha-dalpha)
+        xer=xsr-d*cos(alpha)
+        yer=ysr-d*sin(alpha)
 
-    alpha_deg=alpha*180/pi
-    dalpha_deg=dalpha*180/pi
-    arc=patches.Arc((0,0),2*r,2*r,0,alpha_deg+dalpha_deg,alpha_deg+theta-dalpha_deg)
-    ax.add_patch(arc)
-plt.show()
-pgroove=(2*d)+wd # inner "U" of a groove
-parc=(theta-2*dalpha_deg)*pi/180*r # outer arc length between two grooves
-Phc=perimeter=ngrooves*(pgroove+parc)
-annulus=pi*(d2**2-d1**2)/4
-agroove=d*wd # area of one groove # approximately
-aeps=((2*dalpha)/(2*pi))*pi*r**2-2*0.5*(wd/2)*(r*cos(dalpha))
-agroove_total=agroove+aeps
-agrooves=agroove_total*ngrooves
-#D_hex=0.001523 # m hydraulic diameter
-n_hex=n_per
-A=annulus+agrooves
-P=perimeter+(pi*d2)
-P_hex=[perimeter+pi*d2]*n_hex # flow perimeter
-A_hex=[annulus+agrooves]*n_hex
-D_hex=4*A/P
-T_hex=[T_initial]*n_hex
-hc=Nu*kt/D_hex #331.916164 # W/m^2K
-s_hex=[x*L_hex/(n_hex*1.) for x in range(0,n_hex)]
-source_hex=[-4*hc*(T_hex[x]-T_cold)/(D_hex*rho_0*cp) for x in range(0,n_hex)]
-ds_hex=[L_hex/(n_hex*1.)]*n_hex # step sizes in hex
-top_z_hex=(1.937+(10*0.0254))
-z_hex=[top_z_hex-x*L_hex/(n_hex*1.) for x in range(0,n_hex)]
-#Grhex= (g*beta_t*rho**2*Dh**3*(q_h*(L_hex+L_down)/(A*mu*cp)))/(mu**2)
-x_hex=[0.0]*n_hex
+        # draw line at edge of each groove
+        line=plt.plot([xsl,xel],[ysl,yel],color='black')
+        line=plt.plot([xsr,xer],[ysr,yer],color='black')
+        # and bottom of groove
+        line=plt.plot([xel,xer],[yel,yer],color='black')
 
-##############################################
-# HEX stainless wall parameters
-##############################################
-T_hex_wall=[T_initial]*n_hex
-alpha_hex_wall=[kt_steel/(cp_steel*rho_steel)]*n_hex
-rhocp_hex_wall=[cp_steel*rho_steel]*n_hex
-ID_hex_wall=[d2]*n_hex
-thick_hex_wall=[(5-d2)/2]*n_hex # wall thickness, guess 5" OD
+        alpha_deg=alpha*180/pi
+        dalpha_deg=dalpha*180/pi
+        arc=patches.Arc((0,0),2*r,2*r,0,alpha_deg+dalpha_deg,alpha_deg+theta-dalpha_deg)
+        ax.add_patch(arc)
+    plt.show()
+    pgroove=(2*d)+wd # inner "U" of a groove
+    parc=(theta-2*dalpha_deg)*pi/180*r # outer arc length between two grooves
+    Phc=perimeter=ngrooves*(pgroove+parc)
+    annulus=pi*(d2**2-d1**2)/4
+    agroove=d*wd # area of one groove # approximately
+    aeps=((2*dalpha)/(2*pi))*pi*r**2-2*0.5*(wd/2)*(r*cos(dalpha))
+    agroove_total=agroove+aeps
+    agrooves=agroove_total*ngrooves
+    #D_hex=0.001523 # m hydraulic diameter
+    n_hex=n_per
+    A=annulus+agrooves
+    P=perimeter+(pi*d2)
+    P_hex=[perimeter+pi*d2]*n_hex # flow perimeter
+    A_hex=[annulus+agrooves]*n_hex
+    D_hex=4*A/P
+    T_hex=[T_initial]*n_hex
+    hc=Nu*kt/D_hex #331.916164 # W/m^2K
+    s_hex=[x*L_hex/(n_hex*1.) for x in range(0,n_hex)]
+    source_hex=[-4*hc*(T_hex[x]-T_cold)/(D_hex*rho_0*cp) for x in range(0,n_hex)]
+    ds_hex=[L_hex/(n_hex*1.)]*n_hex # step sizes in hex
+    top_z_hex=(1.937+(10*0.0254))
+    z_hex=[top_z_hex-x*L_hex/(n_hex*1.) for x in range(0,n_hex)]
+    #Grhex= (g*beta_t*rho**2*Dh**3*(q_h*(L_hex+L_down)/(A*mu*cp)))/(mu**2)
+    x_hex=[0.0]*n_hex
 
+    ##############################################
+    # HEX stainless wall parameters
+    ##############################################
+    T_hex_wall=[T_initial]*n_hex
+    alpha_hex_wall=[kt_steel/(cp_steel*rho_steel)]*n_hex
+    rhocp_hex_wall=[cp_steel*rho_steel]*n_hex
+    ID_hex_wall=[d2]*n_hex
+    thick_hex_wall=[(5*0.0254-d2)/2]*n_hex # wall thickness, guess 5" OD
+
+else:
+    ##############################################
+    # hex geometry of helix, taken from https://github.com/jmartin1454/d2-hex/blob/master/Helix-as-tube-v2.ipynb
+    ##############################################
+
+    L=L_hex=10*0.0254 #m physical height of tube, from CM.LD2.015.R2
+    Ngrooves=1 # number of grooves, the optimal groove will be explored in another notebook 
+    D=4.76*0.0254 #m diameter of tube from CM.LD2.015.R2
+    wprime= 0.015 #m width of groove
+    uprime= 0.01 # m width between grooves
+    depth=0.015 # m depth of groove
+    sinalpha=(Ngrooves*(wprime+uprime))/(pi*D) #pitch angle
+    alpha=asin(sinalpha)
+
+    Lprime=L/sinalpha #m, length of wound groove
+    appturns=Lprime/(pi*D) # note:  a small-angle approximation has been used here
+    turns=L/(tan(alpha)*pi*D) # correct calculation with no small-angle approximation
+    ahelix=Ngrooves*wprime*depth # m^2, total flow area of all the grooves
+    phelix=Ngrooves*(2*depth+2*wprime) # m, total flow perimeter of all the grooves 
+    Dh=4*ahelix/phelix #m
+    pcold=Ngrooves*(wprime+2*depth) # m, cold perimeter
+
+    n_hex=n_per
+    A=ahelix
+    P=phelix
+    P_hex=[phelix]*n_hex # flow perimeter
+    A_hex=[ahelix]*n_hex
+    D_hex=4*A/P
+    T_hex=[T_initial]*n_hex
+    hc=Nu*kt/D_hex #331.916164 # W/m^2K
+    s_hex=[x*Lprime/(n_hex*1.) for x in range(0,n_hex)]
+    source_hex=[-4*hc*(T_hex[x]-T_cold)/(D_hex*rho_0*cp)*pcold/phelix for x in range(0,n_hex)]
+    ds_hex=[Lprime/(n_hex*1.)]*n_hex # step sizes in hex
+    top_z_hex=(1.937+(10*0.0254))
+    z_hex=[top_z_hex-x*L/(n_hex*1.) for x in range(0,n_hex)]
+    #Grhex= (g*beta_t*rho**2*Dh**3*(q_h*(L_hex+L_down)/(A*mu*cp)))/(mu**2)
+    x_hex=[0.0]*n_hex
+
+    ##############################################
+    # HEX stainless wall parameters
+    ##############################################
+    T_hex_wall=[T_initial]*n_hex
+    alpha_hex_wall=[kt_steel/(cp_steel*rho_steel)]*n_hex
+    rhocp_hex_wall=[cp_steel*rho_steel]*n_hex
+    ID_hex_wall=[D]*n_hex
+    thick_hex_wall=[(5*0.0254-D)/2]*n_hex # wall thickness, guess 5" OD
+
+    
 ##############################################
 # 1st downcomer geometry
 ##############################################
@@ -236,7 +297,7 @@ L_down=1.937 # m, length of downcomer
 D_down=0.0134 # m, diameter of downcomer
 n_down=n_per
 T_down=[T_initial]*n_down
-s_down=[L_hex+x*L_down/(n_down*1.) for x in range(0,n_down)]
+s_down=[Lprime+x*L_down/(n_down*1.) for x in range(0,n_down)]
 Adown=pi*D_down**2/4
 A_down=[pi*D_down**2/4]*n_down
 ds_down=[L_down/(n_down*1.)]*n_down
@@ -264,7 +325,7 @@ D_right=0.0134 # m
 Aright=pi*D_right**2/4
 n_right=n_per
 T_right=[T_initial]*n_right
-s_right=[L_hex+L_down+x*L_right/(n_right*1.) for x in range(0,n_right)]
+s_right=[Lprime+L_down+x*L_right/(n_right*1.) for x in range(0,n_right)]
 A_right=[pi*D_right**2/4]*n_right
 ds_right=[L_right/(n_right*1.)]*n_right
 bottom_z=top_z_hex-L_hex-L_down
@@ -291,7 +352,7 @@ D_down2=D_right # m
 Adown2=pi*D_down2**2/4
 n_down2=n_per
 T_down2=[T_initial]*n_down2
-s_down2=[L_hex+L_down+L_right+x*L_down2/(n_down2*1.) for x in range(0,n_down2)]
+s_down2=[Lprime+L_down+L_right+x*L_down2/(n_down2*1.) for x in range(0,n_down2)]
 A_down2=[pi*D_down2**2/4]*n_down2
 ds_down2=[L_down2/(n_down2*1.)]*n_down2
 bottom_z=top_z_hex-L_hex-L_down
@@ -319,7 +380,7 @@ L_mod=0.5 # m, length of right circular cylinder
 D_mod=0.5 # m, diameter
 n_mod=n_per
 T_mod=[T_initial]*n_mod
-s_mod=[L_hex+L_down+L_right+L_down2+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
+s_mod=[Lprime+L_down+L_right+L_down2+x*L_mod/(n_mod*1.) for x in range(0,n_mod)]
 q_h=q_mod_total/(L_mod*pi*D_mod) # W/m^2
 source_mod=[4*q_h/(D_mod*rho_0*cp)]*n_mod # W/(J/K)=K/s
 A_mod=[pi*D_mod**2/4]*n_mod
@@ -373,7 +434,7 @@ L_left=L_right # m, length to moderator vessel
 D_left=0.03175 # m
 n_left=n_per
 T_left=[T_initial]*n_left
-s_left=[L_hex+L_down+L_right+L_down2+L_mod+x*L_left/(n_left*1.) for x in range(0,n_left)]
+s_left=[Lprime+L_down+L_right+L_down2+L_mod+x*L_left/(n_left*1.) for x in range(0,n_left)]
 A_left=[pi*D_left**2/4]*n_left
 Aleft=pi*D_left**2/4
 ds_left=[L_left/(n_left*1.)]*n_left
@@ -399,7 +460,7 @@ L_rise=L_hex+L_down #top_z_hex-bottom_z-L_mod # m, height of rise
 D_rise=0.03175 # m, diameter
 n_rise=n_per
 T_rise=[T_initial]*n_rise
-s_rise=[L_hex+L_down+L_right+L_down2+L_mod+L_left+x*L_rise/(n_rise*1.) for x in range(0,n_rise)]
+s_rise=[Lprime+L_down+L_right+L_down2+L_mod+L_left+x*L_rise/(n_rise*1.) for x in range(0,n_rise)]
 A_rise=[pi*D_rise**2/4]*n_rise
 Arise=pi*D_rise**2/4
 ds_rise=[L_rise/(n_rise*1.)]*n_rise
@@ -451,7 +512,7 @@ thick_wall=np.array(thick_hex_wall+thick_down_wall+thick_right_wall+thick_down2_
 #Ng=(Lt/Dr)*()
 
 
-Tot_vol = (A*L_hex) + (pi*D_down**2*L_down/4) + (pi*D_right**2*L_right/4) + (pi*D_down2**2*L_down2/4) + (pi*D_mod**2*L_mod/4) + (pi*D_left**2*L_left/4) + (pi*D_rise**2*L_rise/4)
+Tot_vol = (A*Lprime) + (pi*D_down**2*L_down/4) + (pi*D_right**2*L_right/4) + (pi*D_down2**2*L_down2/4) + (pi*D_mod**2*L_mod/4) + (pi*D_left**2*L_left/4) + (pi*D_rise**2*L_rise/4)
 print('total vol is %f m3' %Tot_vol )
 
 
