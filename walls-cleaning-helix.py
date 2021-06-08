@@ -160,19 +160,12 @@ sinalpha=(Ngrooves*(wprime+uprime))/(pi*D) #pitch angle
 alpha=asin(sinalpha)
 
 Lprime=L/sinalpha #m, length of wound groove
-
 appturns=Lprime/(pi*D) # note:  a small-angle approximation has been used here
-
 turns=L/(tan(alpha)*pi*D) # correct calculation with no small-angle approximation
-
 ahelix=Ngrooves*wprime*depth # m^2, total flow area of all the grooves
-
 phelix=Ngrooves*(2*depth+2*wprime) # m, total flow perimeter of all the grooves 
-
 Dh=4*ahelix/phelix #m
-
 pcold=Ngrooves*(wprime+2*depth) # m, cold perimeter
-
 
 n_hex=n_per
 A=ahelix
