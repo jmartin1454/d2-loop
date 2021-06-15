@@ -155,7 +155,7 @@ cp=6565. # J/(kg-K), specific heat capacity of LD2
 T_cold=19.8 # K
 T_initial=T_cold+0.1
 
-n_per=100
+n_per=10
 
 ##############################################
 # hex geometry of inital laminar
@@ -262,7 +262,7 @@ else:
     ahelix=Ngrooves*wprime*depth # m^2, total flow area of all the grooves
     phelix=Ngrooves*(2*depth+2*wprime) # m, total flow perimeter of all the grooves 
     Dh=4*ahelix/phelix #m
-    pcold=Ngrooves*(wprime+2*depth) # m, cold perimeter
+    pcold=perimeter=Ngrooves*(wprime+2*depth) # m, cold perimeter
 
     n_hex=n_per
     A=ahelix
@@ -546,7 +546,7 @@ def set_beam_current(curr):
     fractional_power=curr/10. # dimensionless, normalized to 10 uA
     source=Q_per_volume*fractional_power/(rho_0*cp)
     # heat in 2nd downcomer
-    source_array[n_hex+n_down+n_right:n_hex+n_down+n_right+n_down2]=[0]*n_down2
+    source_array[n_hex+n_down+n_right:n_hex+n_down+n_right+n_down2]=[source]*n_down2
     # heat in moderator volume itself
     source_array[n_hex+n_down+n_right+n_down2:n_hex+n_down+n_right+n_down2+n_mod]=[source]*n_mod
     return
@@ -554,8 +554,8 @@ def set_beam_current(curr):
 fRe=24.00*4
 Nu=4.8608 #or some constant, laminar case
 #hc=Nu*kt/D #will also be constant
-n_tsteps=1000000
-dt=.01 # s
+n_tsteps=100000
+dt=.1 # s
 # consider adaptive time steps see Vijayan eq. (4.99)
 beam_cycle=240 # s
 beam_on=60 # s
@@ -696,7 +696,7 @@ for tstep in range(0,n_tsteps):
     source_fluid_to_wall[0:n_hex]=source_fluid_to_wall[0:n_hex]*(1-perimeter/P)
 
     # update hex cold source
-    source_array[0:n_hex]=-4*hc*(T_array[0:n_hex]-T_cold)/(D_hex*rho_0*cp)*perimeter/P
+    source_array[0:n_hex]=-4*hcw[0:n_hex]*(T_array[0:n_hex]-T_cold)/(D_hex*rho_0*cp)*perimeter/P
 
     sparse=1000 # sparseness of standard output
     if(tstep%sparse==0):
